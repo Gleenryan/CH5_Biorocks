@@ -13,5 +13,6 @@ struct CH5_BiorocksApp: App {
         WindowGroup {
             ContentView()
         }
+        .defaultSize(width: 900, height: 650)
     }
 }
