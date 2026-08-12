@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct CH5_BiorocksApp: App {
@@ -15,5 +16,6 @@ struct CH5_BiorocksApp: App {
         }
         .defaultSize(width: 900, height: 650)
         .windowStyle(.hiddenTitleBar)
+        .modelContainer(for: CustomLocation.self)
     }
 }
