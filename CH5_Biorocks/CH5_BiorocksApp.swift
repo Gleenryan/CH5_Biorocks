@@ -14,5 +14,6 @@ struct CH5_BiorocksApp: App {
             ContentView()
         }
         .defaultSize(width: 900, height: 650)
+        .windowStyle(.hiddenTitleBar)
     }
 }
