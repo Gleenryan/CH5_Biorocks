@@ -13,21 +13,23 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             SidebarView(selection: $selectedItem)
-                // Set the default, minimum, and maximum width for the sidebar
-                .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 350)
+                .navigationTitle("")
         } detail: {
-            if let item = selectedItem {
-                switch item {
-                case .onboarding:
-                    onBoardingView()
-                case .microphone:
-                    microphoneView()
+            Group {
+                if let item = selectedItem {
+                    switch item {
+                    case .onboarding:
+                        onBoardingView()
+                    case .microphone:
+                        microphoneView()
+                    }
+                } else {
+                    Text("Select an item from the sidebar")
+                        .font(.title)
+                        .foregroundColor(.secondary)
                 }
-            } else {
-                Text("Select an item from the sidebar")
-                    .font(.title)
-                    .foregroundColor(.secondary)
             }
+            .navigationTitle("")
         }
     }
 }
