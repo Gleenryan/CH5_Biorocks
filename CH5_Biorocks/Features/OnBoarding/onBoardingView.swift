@@ -46,7 +46,7 @@ struct onBoardingView: View {
                             .padding(.vertical, 12)
                             .background(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color(red: 0.2, green: 0.85, blue: 0.75), Color(red: 0.15, green: 0.65, blue: 0.85)]),
+                                    gradient: Gradient(colors: [Color(hex: 0x1DB7D9), Color(hex: 0x29CBB5)]),
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
