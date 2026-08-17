@@ -12,6 +12,7 @@ struct DynamicMapView: View {
                 Marker(location.name, coordinate: location.coordinate)
             }
         }
+        .mapStyle(.standard)
         .mapControls {
             MapCompass()
             MapScaleView()
