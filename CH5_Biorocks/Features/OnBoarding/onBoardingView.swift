@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct onBoardingView: View {
+    var onStart: () -> Void = {}
+
     var body: some View {
         ZStack {
 
@@ -37,7 +39,7 @@ struct onBoardingView: View {
                         .multilineTextAlignment(.leading)
                     
                     Button(action: {
-                        // Action for Let's Start
+                        onStart()
                     }) {
                         Text("Let's Start")
                             .font(.title)
@@ -57,12 +59,12 @@ struct onBoardingView: View {
                     .padding(.top, 13)
                     
                 }
-                .padding(.leading, 100)
+                .padding(.leading, 56)
                 
                 Spacer()
             }
         }
-        .frame(minWidth: 800, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
+        .frame(minWidth: 540, maxWidth: .infinity, minHeight: 520, maxHeight: .infinity)
         .ignoresSafeArea()
     }
 }

@@ -6,34 +6,52 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
-    @State private var selectedItem: SidebarItem? = .onboarding
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var selectedItem: SidebarItem?
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+
+    init() {
+        let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        _selectedItem = State(initialValue: hasCompletedOnboarding ? .sites : .onboarding)
+    }
     
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(selection: $selectedItem)
-                .navigationTitle("")
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 280)
         } detail: {
-            Group {
-                if let item = selectedItem {
-                    switch item {
-                    case .onboarding:
-                        onBoardingView()
-                    case .microphone:
-                        microphoneView()
-                    }
-                } else {
-                    Text("Select an item from the sidebar")
-                        .font(.title)
-                        .foregroundColor(.secondary)
+            detailContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .navigationTitle("")
+        }
+        .frame(minWidth: 800, minHeight: 600)
+    }
+
+    @ViewBuilder
+    private var detailContent: some View {
+        switch selectedItem ?? .sites {
+        case .onboarding:
+            onBoardingView {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    hasCompletedOnboarding = true
+                    selectedItem = .sites
                 }
             }
-            .navigationTitle("")
+
+        case .sites:
+            SiteHomeView()
+
+        case .microphone:
+            microphoneView()
         }
     }
+
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [Site.self, CustomLocation.self], inMemory: true)
 }

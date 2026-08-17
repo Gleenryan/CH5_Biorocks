@@ -16,6 +16,6 @@ struct CH5_BiorocksApp: App {
         }
         .defaultSize(width: 900, height: 650)
         .windowStyle(.hiddenTitleBar)
-        .modelContainer(for: CustomLocation.self)
+        .modelContainer(for: [Site.self, CustomLocation.self])
     }
 }
