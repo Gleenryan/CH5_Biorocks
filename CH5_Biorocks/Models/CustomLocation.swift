@@ -8,6 +8,8 @@ class CustomLocation: Identifiable {
     var name: String
     var latitude: Double
     var longitude: Double
+    var microphoneDeviceID: String?
+    var microphoneDeviceName: String?
     var site: Site?
     
     // Computed property for MapKit convenience
@@ -20,12 +22,16 @@ class CustomLocation: Identifiable {
         name: String,
         latitude: Double,
         longitude: Double,
+        microphoneDeviceID: String? = nil,
+        microphoneDeviceName: String? = nil,
         site: Site? = nil
     ) {
         self.id = id
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
+        self.microphoneDeviceID = microphoneDeviceID
+        self.microphoneDeviceName = microphoneDeviceName
         self.site = site
     }
 }

@@ -204,16 +204,26 @@ struct SiteDetailView: View {
         .frame(maxHeight: .infinity)
     }
 
-    private func saveHydrophone(name: String, latitude: Double, longitude: Double) {
+    private func saveHydrophone(
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        microphoneDeviceID: String,
+        microphoneDeviceName: String
+    ) {
         if let editingHydrophone {
             editingHydrophone.name = name
             editingHydrophone.latitude = latitude
             editingHydrophone.longitude = longitude
+            editingHydrophone.microphoneDeviceID = microphoneDeviceID
+            editingHydrophone.microphoneDeviceName = microphoneDeviceName
         } else {
             let hydrophone = CustomLocation(
                 name: name,
                 latitude: latitude,
                 longitude: longitude,
+                microphoneDeviceID: microphoneDeviceID,
+                microphoneDeviceName: microphoneDeviceName,
                 site: site
             )
             modelContext.insert(hydrophone)
@@ -253,6 +263,8 @@ private struct HydrophoneRow: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
 
+    @State private var isConfirmingDeletion = false
+
     var body: some View {
         HStack(spacing: 11) {
             Image(systemName: "mic.fill")
@@ -272,19 +284,40 @@ private struct HydrophoneRow: View {
 
             Spacer()
 
-            Button(action: onEdit) {
-                Image(systemName: "pencil")
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Edit Hydrophone")
+
+                Button(role: .destructive) {
+                    isConfirmingDeletion = true
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.plain)
+                .help("Delete Hydrophone")
             }
-            .buttonStyle(.plain)
-            .help("Edit Hydrophone")
         }
         .padding(.horizontal, 11)
         .frame(height: 56)
         .background(.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
         .contextMenu {
             Button("Edit", action: onEdit)
-            Button("Delete", role: .destructive, action: onDelete)
+            Button("Delete", role: .destructive) {
+                isConfirmingDeletion = true
+            }
+        }
+        .confirmationDialog(
+            "Delete \(hydrophone.name)?",
+            isPresented: $isConfirmingDeletion,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Hydrophone", role: .destructive, action: onDelete)
+        } message: {
+            Text("This hydrophone will be permanently removed from this Site.")
         }
     }
 }
