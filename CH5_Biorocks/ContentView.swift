@@ -1,17 +1,11 @@
-//
-//  ContentView.swift
-//  CH5_Biorocks
-//
-//  Created by Gleenryan on 11/08/26.
-//
-
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var detectionStore: DetectionStore
+    @EnvironmentObject private var hydrophoneHub: HydrophoneHub
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @AppStorage("hasSeededRequestedDemoSitesV1") private var hasSeededRequestedDemoSites = false
     @Query(sort: \Site.createdAt, order: .reverse) private var sites: [Site]
 
     @State private var selection: SidebarDestination? = .home
@@ -19,8 +13,6 @@ struct ContentView: View {
     @State private var isPresentingNewSite = false
     @State private var sitePendingDeletion: Site?
     @State private var isConfirmingSiteDeletion = false
-    @State private var demoSeedErrorMessage = ""
-    @State private var isShowingDemoSeedError = false
 
     var body: some View {
         Group {
@@ -36,6 +28,12 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 840, minHeight: 620)
+        .task {
+            SimulatorCatalog.bootstrap(modelContext: modelContext)
+            detectionStore.attach(modelContext: modelContext)
+            hydrophoneHub.attach(store: detectionStore)
+            hydrophoneHub.start()
+        }
     }
 
     private var applicationShell: some View {
@@ -70,9 +68,6 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.18), value: isPresentingNewSite)
-        .task {
-            seedRequestedDemoSitesIfNeeded()
-        }
         .confirmationDialog(
             "Delete \(sitePendingDeletion?.name ?? "Site")?",
             isPresented: $isConfirmingSiteDeletion,
@@ -81,11 +76,6 @@ struct ContentView: View {
             Button("Delete Site", role: .destructive, action: deletePendingSite)
         } message: {
             Text("The Site and all of its hydrophones will be permanently removed.")
-        }
-        .alert("Demo Data Could Not Be Added", isPresented: $isShowingDemoSeedError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(demoSeedErrorMessage)
         }
     }
 
@@ -105,6 +95,12 @@ struct ContentView: View {
         case .microphones:
             microphoneView()
 
+        case .simulator:
+            SimulatorView()
+
+        case .alerts:
+            AlertsWorkspace()
+
         case .site(let siteID):
             if let site = sites.first(where: { $0.id == siteID }) {
                 sitesWorkspace(selectedSite: site)
@@ -116,11 +112,7 @@ struct ContentView: View {
 
     private func sitesWorkspace(selectedSite: Site) -> some View {
         SitesWorkspaceView(
-            sites: sites,
-            selectedSite: selectedSite,
-            onSelectSite: { site in
-                selection = .site(site.id)
-            },
+            site: selectedSite,
             onAddSite: presentNewSite
         )
     }
@@ -168,24 +160,28 @@ struct ContentView: View {
         modelContext.delete(sitePendingDeletion)
         self.sitePendingDeletion = nil
     }
+}
 
-    private func seedRequestedDemoSitesIfNeeded() {
-        guard !hasSeededRequestedDemoSites else { return }
-
-        do {
-            try DemoSiteSeeder.seedMissingSites(
-                into: modelContext,
-                existingSites: sites
-            )
-            hasSeededRequestedDemoSites = true
-        } catch {
-            demoSeedErrorMessage = error.localizedDescription
-            isShowingDemoSeedError = true
+private struct AlertsWorkspace: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Alerts")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+            Text("Blast detections promoted after Model 1, Model 2, and debounce. Simulator events stay tagged as simulator.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            AlertsView()
         }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Site.self, CustomLocation.self], inMemory: true)
+        .environmentObject(DetectionStore())
+        .environmentObject(HydrophoneHub())
+        .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
 }

@@ -1,32 +1,30 @@
 import SwiftUI
+import SwiftData
 import Charts
 import CoreLocation
 
-/// Prototype dashboard content. Monitoring values and alerts are intentionally
-/// static until a real sensor/alert data source is connected.
 struct SiteOverviewView: View {
     let site: Site
     let hydrophones: [CustomLocation]
 
-    private let temperaturePoints = [
-        TrendPoint(hour: 0, value: 28.8),
-        TrendPoint(hour: 4, value: 29.0),
-        TrendPoint(hour: 8, value: 29.4),
-        TrendPoint(hour: 12, value: 30.0),
-        TrendPoint(hour: 16, value: 30.6),
-        TrendPoint(hour: 20, value: 31.1),
-        TrendPoint(hour: 24, value: 31.2)
-    ]
+    @EnvironmentObject private var store: DetectionStore
+    @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse) private var events: [BlastDetectionEvent]
+    @Query(sort: \HealthSnapshotRecord.windowStart, order: .reverse) private var snapshots: [HealthSnapshotRecord]
+
+    private var siteEvents: [BlastDetectionEvent] {
+        events.filter { $0.siteName == site.name }
+    }
+
+    private var siteHealth: [HealthSnapshotRecord] {
+        snapshots.filter { $0.siteName == site.name }
+    }
+
+    private var liveCount: Int {
+        store.liveHydrophones.filter { $0.siteName == site.name && $0.connected }.count
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("Demo overview", systemImage: "testtube.2")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-
             mapAndSummary
             metricsGrid
             activityAndTrend
@@ -36,13 +34,9 @@ struct SiteOverviewView: View {
     private var mapAndSummary: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 16) {
-                mapCard
-                    .frame(minWidth: 330, maxWidth: .infinity)
-
-                summaryCard
-                    .frame(width: 218)
+                mapCard.frame(minWidth: 330, maxWidth: .infinity)
+                summaryCard.frame(width: 218)
             }
-
             VStack(spacing: 16) {
                 mapCard
                 summaryCard
@@ -60,41 +54,29 @@ struct SiteOverviewView: View {
 
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Text("Site Summary")
-                    .font(.headline)
-
-                Spacer()
-
-                Text("Demo")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
+            Text("Site Summary")
+                .font(.headline)
 
             OverviewSummaryRow(
-                title: "Sensors Active",
-                value: "\(hydrophones.count) / \(hydrophones.count)",
+                title: "Sensors live",
+                value: "\(liveCount) / \(hydrophones.count)",
                 systemImage: "sensor"
             )
-
             OverviewSummaryRow(
-                title: "Last Update",
-                value: "5 min ago",
+                title: "Last update",
+                value: lastUpdateText,
                 systemImage: "clock"
             )
-
             OverviewSummaryRow(
-                title: "Depth Range",
-                value: "5 – 25 m",
-                systemImage: "arrow.down.to.line"
+                title: "Blast alerts",
+                value: "\(siteEvents.count)",
+                systemImage: "bell"
             )
-
             OverviewSummaryRow(
-                title: "Route Length",
+                title: "Route length",
                 value: routeLength,
                 systemImage: "point.topleft.down.to.point.bottomright.curvepath"
             )
-
             Spacer(minLength: 0)
         }
         .padding(16)
@@ -107,36 +89,33 @@ struct SiteOverviewView: View {
             columns: [GridItem(.adaptive(minimum: 150), spacing: 12)],
             spacing: 12
         ) {
-            DemoMetricCard(
-                title: "Sea Temperature",
-                value: "30.8 °C",
-                change: "↑ +0.6 °C",
-                tint: .red,
-                points: [29.9, 30.1, 30.0, 30.3, 30.5, 30.8]
+            MetricCard(
+                title: "Health composite",
+                value: siteHealth.first.map { String(format: "%.0f", $0.healthScore) } ?? "—",
+                change: siteHealth.first?.healthClass ?? "awaiting audio",
+                tint: .accentColor,
+                points: siteHealth.prefix(8).reversed().map(\.healthScore)
             )
-
-            DemoMetricCard(
-                title: "pH Level",
-                value: "7.9",
-                change: "↑ +0.1",
+            MetricCard(
+                title: "NDSI",
+                value: siteHealth.first.map { String(format: "%.2f", $0.ndsi) } ?? "—",
+                change: "bio vs anthro band",
                 tint: .blue,
-                points: [7.8, 7.82, 7.78, 7.86, 7.87, 7.9]
+                points: siteHealth.prefix(8).reversed().map(\.ndsi)
             )
-
-            DemoMetricCard(
-                title: "Turbidity",
-                value: "1.8 NTU",
-                change: "↓ -0.3",
+            MetricCard(
+                title: "Snap rate",
+                value: siteHealth.first.map { String(format: "%.0f /min", $0.snapRatePerMin) } ?? "—",
+                change: "2–8 kHz peaks",
                 tint: .green,
-                points: [2.2, 2.1, 2.12, 2.0, 1.92, 1.8]
+                points: siteHealth.prefix(8).reversed().map(\.snapRatePerMin)
             )
-
-            DemoMetricCard(
-                title: "Noise Level",
-                value: "142 dB",
-                change: "↑ +4 dB",
+            MetricCard(
+                title: "Low-freq level",
+                value: siteHealth.first.map { String(format: "%.1f dBFS", $0.lowFreqSPL_dB) } ?? "—",
+                change: "uncalibrated",
                 tint: .orange,
-                points: [134, 135, 136, 136, 140, 142]
+                points: siteHealth.prefix(8).reversed().map(\.lowFreqSPL_dB)
             )
         }
     }
@@ -144,140 +123,95 @@ struct SiteOverviewView: View {
     private var activityAndTrend: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 16) {
-                recentAlertsCard
-                    .frame(minWidth: 290, maxWidth: .infinity)
-
-                temperatureTrendCard
-                    .frame(minWidth: 320, maxWidth: .infinity)
+                recentAlertsCard.frame(minWidth: 290, maxWidth: .infinity)
+                healthTrendCard.frame(minWidth: 320, maxWidth: .infinity)
             }
-
             VStack(spacing: 16) {
                 recentAlertsCard
-                temperatureTrendCard
+                healthTrendCard
             }
         }
     }
 
     private var recentAlertsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Recent Alerts")
-                    .font(.headline)
+            Text("Recent Alerts")
+                .font(.headline)
 
-                Spacer()
-
-                Text("Demo")
-                    .font(.caption2.weight(.semibold))
+            if siteEvents.isEmpty {
+                Text("No promoted blast events for this Site yet.")
+                    .font(.callout)
                     .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+            } else {
+                ForEach(siteEvents.prefix(3)) { event in
+                    AlertRow(
+                        title: event.narrative.split(separator: "\n").first.map(String.init) ?? "Blast detection",
+                        detail: "\(event.hydrophoneName) · \(event.onsetTime.formatted(date: .omitted, time: .shortened))",
+                        severity: event.severity,
+                        systemImage: "waveform.path",
+                        tint: event.severity.lowercased() == "high" ? .red : .orange
+                    )
+                }
+                Spacer(minLength: 0)
             }
-
-            DemoAlertRow(
-                title: "Coral Bleaching Detected",
-                detail: "\(site.name) · 10 min ago",
-                severity: "High",
-                systemImage: "thermometer.high",
-                tint: .red
-            )
-
-            DemoAlertRow(
-                title: "Unusual Noise Levels",
-                detail: "Hydrophone 2 · 3 hrs ago",
-                severity: "Medium",
-                systemImage: "mic.fill",
-                tint: .orange
-            )
-
-            DemoAlertRow(
-                title: "Water Quality Change",
-                detail: "\(site.name) · 1 day ago",
-                severity: "Low",
-                systemImage: "slider.horizontal.3",
-                tint: .yellow
-            )
-
-            Spacer(minLength: 0)
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 280, alignment: .topLeading)
         .siteGlassCard(cornerRadius: 18)
     }
 
-    private var temperatureTrendCard: some View {
+    private var healthTrendCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Temperature Trend")
+                Text("Health composite")
                     .font(.headline)
-
                 Spacer()
-
-                Text("Last 24h · Demo")
+                Text("Unsupervised")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Chart(temperaturePoints) { point in
-                AreaMark(
-                    x: .value("Hour", point.hour),
-                    yStart: .value("Baseline", 28.5),
-                    yEnd: .value("Temperature", point.value)
-                )
-                .foregroundStyle(
-                    .linearGradient(
-                        colors: [Color.accentColor.opacity(0.28), Color.accentColor.opacity(0.03)],
-                        startPoint: .top,
-                        endPoint: .bottom
+            if siteHealth.count < 2 {
+                Text("A trend appears after two or more hydrophone snapshots.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+            } else {
+                Chart(Array(siteHealth.prefix(12).reversed()), id: \.id) { snap in
+                    LineMark(
+                        x: .value("Time", snap.windowStart),
+                        y: .value("Score", snap.healthScore)
                     )
-                )
-
-                LineMark(
-                    x: .value("Hour", point.hour),
-                    y: .value("Temperature", point.value)
-                )
-                .foregroundStyle(Color.accentColor)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-            }
-            .chartYScale(domain: 28.5 ... 31.5)
-            .chartXAxis {
-                AxisMarks(values: [0, 6, 12, 18, 24]) { value in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel {
-                        if let hour = value.as(Int.self) {
-                            Text(timeLabel(for: hour))
-                        }
-                    }
+                    .foregroundStyle(Color.accentColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 }
+                .chartYScale(domain: 0 ... 100)
+                .frame(minHeight: 210)
             }
-            .chartYAxis {
-                AxisMarks(position: .leading)
-            }
-            .frame(minHeight: 210)
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 280, alignment: .topLeading)
         .siteGlassCard(cornerRadius: 18)
+    }
+
+    private var lastUpdateText: String {
+        let eventDate = siteEvents.first?.onsetTime
+        let healthDate = siteHealth.first?.windowStart
+        guard let latest = [eventDate, healthDate].compactMap({ $0 }).max() else {
+            return liveCount > 0 ? "live" : "never"
+        }
+        return latest.formatted(.relative(presentation: .named))
     }
 
     private var routeLength: String {
         let start = CLLocation(latitude: site.startLatitude, longitude: site.startLongitude)
         let end = CLLocation(latitude: site.endLatitude, longitude: site.endLongitude)
         let meters = start.distance(from: end)
-
         if meters >= 1_000 {
             return "\((meters / 1_000).formatted(.number.precision(.fractionLength(1)))) km"
         }
-
         return "\(meters.formatted(.number.precision(.fractionLength(0)))) m"
-    }
-
-    private func timeLabel(for hour: Int) -> String {
-        switch hour {
-        case 0: "00:00"
-        case 6: "06:00"
-        case 12: "12:00"
-        case 18: "18:00"
-        default: "Now"
-        }
     }
 }
 
@@ -306,7 +240,7 @@ private struct OverviewSummaryRow: View {
     }
 }
 
-private struct DemoMetricCard: View {
+private struct MetricCard: View {
     let title: String
     let value: String
     let change: String
@@ -315,42 +249,35 @@ private struct DemoMetricCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-
-                Spacer(minLength: 4)
-
-                Text("Demo")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.secondary)
-            }
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
 
             HStack(alignment: .firstTextBaseline, spacing: 7) {
                 Text(value)
                     .font(.system(size: 22, weight: .medium, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
-
                 Text(change)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(tint)
                     .lineLimit(1)
             }
 
-            Chart(Array(points.enumerated()), id: \.offset) { index, value in
-                LineMark(
-                    x: .value("Sample", index),
-                    y: .value(title, value)
-                )
-                .foregroundStyle(tint)
-                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+            if points.count > 1 {
+                Chart(Array(points.enumerated()), id: \.offset) { index, value in
+                    LineMark(
+                        x: .value("Sample", index),
+                        y: .value(title, value)
+                    )
+                    .foregroundStyle(tint)
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+                }
+                .chartXAxis(.hidden)
+                .chartYAxis(.hidden)
+                .frame(height: 34)
             }
-            .chartXAxis(.hidden)
-            .chartYAxis(.hidden)
-            .frame(height: 34)
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
@@ -359,7 +286,7 @@ private struct DemoMetricCard: View {
     }
 }
 
-private struct DemoAlertRow: View {
+private struct AlertRow: View {
     let title: String
     let detail: String
     let severity: String
@@ -377,16 +304,13 @@ private struct DemoAlertRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.callout.weight(.medium))
-                    .lineLimit(1)
-
+                    .lineLimit(2)
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-
             Spacer(minLength: 6)
-
             Text(severity)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(tint)
@@ -399,24 +323,20 @@ private struct DemoAlertRow: View {
     }
 }
 
-private struct TrendPoint: Identifiable {
-    let hour: Int
-    let value: Double
-
-    var id: Int { hour }
-}
-
 #Preview {
     SiteOverviewView(
         site: Site(
-            name: "Nusa Penida (Demo)",
-            startLatitude: -8.7270,
-            startLongitude: 115.5440,
-            endLatitude: -8.7205,
-            endLongitude: 115.5530
+            name: "Pemuteran",
+            startLatitude: -8.1287,
+            startLongitude: 114.6608,
+            endLatitude: -8.1322,
+            endLongitude: 114.6715
         ),
         hydrophones: []
     )
+    .environmentObject(DetectionStore())
+    .environmentObject(HydrophoneHub())
+    .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
     .frame(width: 900, height: 900)
     .padding()
 }

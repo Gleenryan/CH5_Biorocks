@@ -4,6 +4,8 @@ enum SidebarDestination: Hashable {
     case home
     case sites
     case microphones
+    case simulator
+    case alerts
     case site(UUID)
 }
 
@@ -65,6 +67,10 @@ struct SidebarView: View {
             Section("Tools") {
                 Label("Microphones", systemImage: "mic")
                     .tag(SidebarDestination.microphones)
+                Label("Simulator", systemImage: "waveform.path.ecg")
+                    .tag(SidebarDestination.simulator)
+                Label("Alerts", systemImage: "bell")
+                    .tag(SidebarDestination.alerts)
             }
         }
         .listStyle(.sidebar)

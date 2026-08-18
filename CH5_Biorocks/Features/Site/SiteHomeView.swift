@@ -1,9 +1,13 @@
 import SwiftUI
 import MapKit
+import SwiftData
 
 struct SiteHomeView: View {
     let sites: [Site]
     let onAddSite: () -> Void
+
+    @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse)
+    private var events: [BlastDetectionEvent]
 
     private var hydrophoneCount: Int {
         sites.reduce(0) { $0 + $1.hydrophones.count }
@@ -97,6 +101,13 @@ struct SiteHomeView: View {
                     systemImage: "mic",
                     detail: hydrophoneCount == 1 ? "installed input" : "installed inputs"
                 )
+
+                SummaryCard(
+                    title: "Alerts",
+                    value: events.count,
+                    systemImage: "bell",
+                    detail: events.count == 1 ? "promoted detection" : "promoted detections"
+                )
             }
 
             VStack(spacing: 16) {
@@ -112,6 +123,13 @@ struct SiteHomeView: View {
                     value: hydrophoneCount,
                     systemImage: "mic",
                     detail: hydrophoneCount == 1 ? "installed input" : "installed inputs"
+                )
+
+                SummaryCard(
+                    title: "Alerts",
+                    value: events.count,
+                    systemImage: "bell",
+                    detail: events.count == 1 ? "promoted detection" : "promoted detections"
                 )
             }
         }
@@ -166,5 +184,6 @@ private struct SummaryCard: View {
         ],
         onAddSite: {}
     )
+    .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
     .frame(width: 1000, height: 720)
 }
