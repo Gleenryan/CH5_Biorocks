@@ -1,35 +1,91 @@
 import SwiftUI
 
-enum SidebarItem: String, CaseIterable, Identifiable {
-    case onboarding = "Onboarding"
-    case sites = "Sites"
-    case microphone = "Microphone"
-    
-    var id: String { self.rawValue }
-    
-    var icon: String {
-        switch self {
-        case .onboarding: return "person.crop.circle.badge.plus"
-        case .sites: return "mappin.and.ellipse"
-        case .microphone: return "mic.fill"
-        }
-    }
+enum SidebarDestination: Hashable {
+    case home
+    case alerts
+    case microphones
+    case site(UUID)
 }
 
 struct SidebarView: View {
-    @Binding var selection: SidebarItem?
-    
+    let sites: [Site]
+    @Binding var selection: SidebarDestination?
+    let onAddSite: () -> Void
+    let onDeleteSite: (Site) -> Void
+
+    @State private var isSitesExpanded = true
+
     var body: some View {
-        List(SidebarItem.allCases, selection: $selection) { item in
-            NavigationLink(value: item) {
-                Label(item.rawValue, systemImage: item.icon)
+        List(selection: $selection) {
+            Section {
+                Label("Home", systemImage: "house")
+                    .tag(SidebarDestination.home)
+
+                Label("Alerts", systemImage: "bell")
+                    .tag(SidebarDestination.alerts)
+            }
+
+            Section {
+                DisclosureGroup(isExpanded: $isSitesExpanded) {
+                    if sites.isEmpty {
+                        Text("No Sites yet")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 4)
+                    } else {
+                        ForEach(sites) { site in
+                            Label {
+                                Text(site.name)
+                                    .lineLimit(1)
+                            } icon: {
+                                Image(systemName: "water.waves")
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                            .tag(SidebarDestination.site(site.id))
+                            .contextMenu {
+                                Button("Delete Site", role: .destructive) {
+                                    onDeleteSite(site)
+                                }
+                            }
+                        }
+                    }
+
+                    Button(action: onAddSite) {
+                        Label("Add Site", systemImage: "plus")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.vertical, 4)
+                } label: {
+                    Label("Sites", systemImage: "folder")
+                        .fontWeight(.medium)
+                }
+            }
+
+            Section("Tools") {
+                Label("Microphones", systemImage: "mic")
+                    .tag(SidebarDestination.microphones)
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("Menu")
+        .navigationTitle("Reef Monitor")
     }
 }
 
 #Preview {
-    SidebarView(selection: .constant(.onboarding))
+    SidebarView(
+        sites: [
+            Site(
+                name: "Pemuteran",
+                startLatitude: -8.1287,
+                startLongitude: 114.6608,
+                endLatitude: -8.1322,
+                endLongitude: 114.6715
+            )
+        ],
+        selection: .constant(.home),
+        onAddSite: {},
+        onDeleteSite: { _ in }
+    )
+    .frame(width: 260, height: 600)
 }

@@ -32,7 +32,7 @@ struct SiteFormOverlay: View {
             HStack {
                 Text("NEW SITE")
                     .font(.system(size: 24, weight: .heavy))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
@@ -41,7 +41,7 @@ struct SiteFormOverlay: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
-                        .background(.black.opacity(0.06), in: Circle())
+                        .background(.secondary.opacity(0.1), in: Circle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Close")
@@ -69,7 +69,7 @@ struct SiteFormOverlay: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay {
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(.black.opacity(0.1), lineWidth: 1)
+                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
                 }
 
             HStack(spacing: 12) {
@@ -91,12 +91,12 @@ struct SiteFormOverlay: View {
         }
         .padding(26)
         .frame(width: 650)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
         .overlay {
             RoundedRectangle(cornerRadius: 18)
-                .stroke(.white.opacity(0.7), lineWidth: 1)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
         }
-        .shadow(color: .black.opacity(0.3), radius: 35, y: 18)
+        .shadow(color: .black.opacity(0.22), radius: 30, y: 15)
     }
 
     private func coordinateFields(
@@ -107,7 +107,7 @@ struct SiteFormOverlay: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(.black.opacity(0.75))
+                .foregroundStyle(.secondary)
 
             SiteTextField(title: "Latitude", placeholder: "-8.128667", text: latitude)
             SiteTextField(title: "Longitude", placeholder: "114.660816", text: longitude)
@@ -126,11 +126,11 @@ struct SiteFormOverlay: View {
                 MapPolyline(coordinates: [start, end])
                     .stroke(Color(hex: "17C3B2"), style: StrokeStyle(lineWidth: 4, lineCap: .round))
             }
-            .mapStyle(.hybrid)
+            .mapStyle(.standard)
             .id("\(start.latitude)-\(start.longitude)-\(end.latitude)-\(end.longitude)")
         } else {
             ZStack {
-                Color.black.opacity(0.06)
+                Color(nsColor: .controlBackgroundColor)
                 VStack(spacing: 8) {
                     Image(systemName: "map")
                         .font(.system(size: 28))
@@ -176,10 +176,10 @@ private struct SiteTextField: View {
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 12)
                 .frame(height: 38)
-                .background(.white.opacity(0.58), in: RoundedRectangle(cornerRadius: 7))
+                .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 7))
                 .overlay {
                     RoundedRectangle(cornerRadius: 7)
-                        .stroke(.black.opacity(0.14), lineWidth: 1)
+                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
                 }
         }
     }
@@ -192,14 +192,7 @@ struct SitePrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(.white)
             .padding(.horizontal, 18)
             .frame(height: 38)
-            .background(
-                LinearGradient(
-                    colors: [Color(hex: "1DB7D9"), Color(hex: "29CBB5")],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ),
-                in: RoundedRectangle(cornerRadius: 8)
-            )
+            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 8))
             .opacity(configuration.isPressed ? 0.75 : 1)
     }
 }
@@ -211,13 +204,13 @@ struct SiteSecondaryButtonStyle: ButtonStyle {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 18)
             .frame(height: 38)
-            .background(.black.opacity(configuration.isPressed ? 0.12 : 0.07), in: RoundedRectangle(cornerRadius: 8))
+            .background(.secondary.opacity(configuration.isPressed ? 0.16 : 0.1), in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
 #Preview {
     ZStack {
-        Color.blue
+        Color(nsColor: .windowBackgroundColor)
         SiteFormOverlay(onCancel: {}, onSubmit: { _, _, _, _, _ in })
     }
     .frame(width: 900, height: 700)

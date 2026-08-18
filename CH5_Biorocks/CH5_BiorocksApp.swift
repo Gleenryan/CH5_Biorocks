@@ -11,11 +11,10 @@ import SwiftData
 @main
 struct CH5_BiorocksApp: App {
     var body: some Scene {
-        WindowGroup {
+        WindowGroup("Reef Monitor") {
             ContentView()
         }
-        .defaultSize(width: 900, height: 650)
-        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1_200, height: 800)
         .modelContainer(for: [Site.self, CustomLocation.self])
     }
 }

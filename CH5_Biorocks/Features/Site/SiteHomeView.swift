@@ -1,223 +1,170 @@
 import SwiftUI
-import SwiftData
+import MapKit
 
 struct SiteHomeView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Site.createdAt, order: .reverse) private var sites: [Site]
+    let sites: [Site]
+    let onAddSite: () -> Void
 
-    @State private var isPresentingNewSite = false
+    private var hydrophoneCount: Int {
+        sites.reduce(0) { $0 + $1.hydrophones.count }
+    }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                background
-
-                VStack(spacing: 24) {
-                    Spacer(minLength: 35)
-
-                    VStack(spacing: 12) {
-                        Image(systemName: "water.waves")
-                            .font(.system(size: 38, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 78, height: 78)
-                            .background(.white.opacity(0.18), in: Circle())
-                            .overlay { Circle().stroke(.white.opacity(0.55), lineWidth: 1) }
-
-                        Text("BIOROCKS")
-                            .font(.system(size: 48, weight: .heavy, design: .rounded))
-                            .tracking(2)
-                            .foregroundStyle(.white)
-                    }
-
-                    sitePanel
-
-                    Spacer(minLength: 55)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 24)
-
-                if isPresentingNewSite {
-                    Color.black.opacity(0.45)
-                        .ignoresSafeArea()
-                        .onTapGesture { dismissNewSite() }
-
-                    SiteFormOverlay(
-                        onCancel: dismissNewSite,
-                        onSubmit: createSite
-                    )
-                    .transition(.scale(scale: 0.94).combined(with: .opacity))
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                header
+                overviewMap
+                summaryCards
             }
-            .animation(.easeOut(duration: 0.2), value: isPresentingNewSite)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 28)
         }
-        .frame(minWidth: 540, minHeight: 520)
+        .scrollIndicators(.hidden)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
-    private var background: some View {
-        Image("OnBoardingBackground")
-            .resizable()
-            .scaledToFill()
-            .overlay {
-                LinearGradient(
-                    colors: [.black.opacity(0.02), .black.opacity(0.24)],
-                    startPoint: .top,
-                    endPoint: .bottom
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Overview")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+
+            Text("Monitor your reef Sites and their installed hydrophones.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var overviewMap: some View {
+        ZStack {
+            Map {
+                ForEach(sites) { site in
+                    Marker(
+                        site.name,
+                        systemImage: "water.waves",
+                        coordinate: site.startCoordinate
+                    )
+                    .tint(Color.accentColor)
+
+                    MapPolyline(coordinates: [site.startCoordinate, site.endCoordinate])
+                        .stroke(
+                            Color.accentColor.opacity(0.8),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                        )
+                }
+            }
+            .mapStyle(.standard)
+            .mapControls {
+                MapCompass()
+                MapScaleView()
+                MapPitchToggle()
+            }
+
+            if sites.isEmpty {
+                ContentUnavailableView {
+                    Label("No Sites", systemImage: "map")
+                } description: {
+                    Text("Add your first Site from the sidebar to display it on the map.")
+                } actions: {
+                    Button("Add Site", action: onAddSite)
+                        .buttonStyle(.borderedProminent)
+                }
+                .padding(24)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
+        }
+        .frame(minHeight: 390)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.08), radius: 12, y: 5)
+    }
+
+    private var summaryCards: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 16) {
+                SummaryCard(
+                    title: "Sites",
+                    value: sites.count,
+                    systemImage: "folder",
+                    detail: sites.count == 1 ? "monitored location" : "monitored locations"
+                )
+
+                SummaryCard(
+                    title: "Hydrophones",
+                    value: hydrophoneCount,
+                    systemImage: "mic",
+                    detail: hydrophoneCount == 1 ? "installed input" : "installed inputs"
                 )
             }
-            .ignoresSafeArea()
-    }
-
-    private var sitePanel: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("RECENT SITES")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.78))
-
-                if sites.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "mappin.slash")
-                            .font(.system(size: 24))
-                        Text("No Sites yet")
-                            .font(.headline)
-                        Text("Create your first monitoring Site to get started.")
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                    }
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 10) {
-                            ForEach(sites) { site in
-                                NavigationLink {
-                                    SiteDetailView(site: site)
-                                } label: {
-                                    SiteRow(site: site)
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button("Delete Site", role: .destructive) {
-                                        modelContext.delete(site)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .scrollIndicators(.hidden)
-                }
-            }
-            .padding(24)
-            .frame(minWidth: 270, idealWidth: 330, maxWidth: 330, minHeight: 260, maxHeight: 260)
-
-            Rectangle()
-                .fill(.black.opacity(0.08))
-                .frame(width: 1, height: 230)
 
             VStack(spacing: 16) {
-                Text("CREATE NEW SITE")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.78))
+                SummaryCard(
+                    title: "Sites",
+                    value: sites.count,
+                    systemImage: "folder",
+                    detail: sites.count == 1 ? "monitored location" : "monitored locations"
+                )
 
-                Button {
-                    isPresentingNewSite = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(.white)
-                        .frame(width: 70, height: 70)
-                        .background(
-                            LinearGradient(
-                                colors: [Color(hex: "1DB7D9"), Color(hex: "29CBB5")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            in: RoundedRectangle(cornerRadius: 15)
-                        )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(.white.opacity(0.8), lineWidth: 3)
-                                .padding(5)
-                        }
-                }
-                .buttonStyle(.plain)
-                .help("Create a new Site")
+                SummaryCard(
+                    title: "Hydrophones",
+                    value: hydrophoneCount,
+                    systemImage: "mic",
+                    detail: hydrophoneCount == 1 ? "installed input" : "installed inputs"
+                )
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: 650, minHeight: 260, maxHeight: 260)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 28))
-        .overlay {
-            RoundedRectangle(cornerRadius: 28)
-                .stroke(.white.opacity(0.55), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.2), radius: 28, y: 15)
-    }
-
-    private func createSite(
-        name: String,
-        startLatitude: Double,
-        startLongitude: Double,
-        endLatitude: Double,
-        endLongitude: Double
-    ) {
-        let site = Site(
-            name: name,
-            startLatitude: startLatitude,
-            startLongitude: startLongitude,
-            endLatitude: endLatitude,
-            endLongitude: endLongitude
-        )
-        modelContext.insert(site)
-        dismissNewSite()
-    }
-
-    private func dismissNewSite() {
-        isPresentingNewSite = false
     }
 }
 
-private struct SiteRow: View {
-    let site: Site
+private struct SummaryCard: View {
+    let title: String
+    let value: Int
+    let systemImage: String
+    let detail: String
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "water.waves.and.arrow.trianglehead.down")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 38, height: 38)
-                .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 9))
+        HStack(spacing: 16) {
+            Image(systemName: systemImage)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 48, height: 48)
+                .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(site.name)
-                    .font(.system(size: 15, weight: .semibold))
-                    .lineLimit(1)
-                Text("\(site.hydrophones.count) hydrophone\(site.hydrophones.count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .opacity(0.78)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.headline)
+
+                Text("\(value) \(detail)")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
 
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption.bold())
-                .opacity(0.7)
+            Spacer(minLength: 0)
         }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 12)
-        .frame(height: 54)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "1DB7D9"), Color(hex: "29CBB5")],
-                startPoint: .leading,
-                endPoint: .trailing
-            ),
-            in: RoundedRectangle(cornerRadius: 10)
-        )
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 88)
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        }
     }
 }
 
 #Preview {
-    SiteHomeView()
-        .modelContainer(for: [Site.self, CustomLocation.self], inMemory: true)
+    SiteHomeView(
+        sites: [
+            Site(
+                name: "Pemuteran",
+                startLatitude: -8.1287,
+                startLongitude: 114.6608,
+                endLatitude: -8.1322,
+                endLongitude: 114.6715
+            )
+        ],
+        onAddSite: {}
+    )
+    .frame(width: 1000, height: 720)
 }

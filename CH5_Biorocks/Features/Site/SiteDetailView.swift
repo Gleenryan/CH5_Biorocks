@@ -17,18 +17,13 @@ struct SiteDetailView: View {
 
     var body: some View {
         ZStack {
-            Image("OnBoardingBackground")
-                .resizable()
-                .scaledToFill()
-                .overlay { Color.black.opacity(0.18) }
+            Color(nsColor: .windowBackgroundColor)
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
                 hydrophoneHeader
 
-                Rectangle()
-                    .fill(.white.opacity(0.45))
-                    .frame(height: 1)
+                Divider()
 
                 GeometryReader { proxy in
                     ScrollView {
@@ -66,20 +61,20 @@ struct SiteDetailView: View {
         HStack(spacing: 16) {
             Image(systemName: "mic.fill")
                 .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(Color(hex: "17467D"))
+                .foregroundStyle(Color.accentColor)
                 .frame(width: 52, height: 52)
-                .background(.white.opacity(0.9), in: Circle())
+                .background(Color.accentColor.opacity(0.12), in: Circle())
 
             Text("HYDROPHONE LIST")
                 .font(.system(size: 42, weight: .medium, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.65)
 
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 48)
-        .padding(.top, 72)
+        .padding(.top, 28)
         .padding(.bottom, 24)
     }
 
@@ -89,7 +84,7 @@ struct SiteDetailView: View {
                 .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
 
             Rectangle()
-                .fill(.black.opacity(0.08))
+                .fill(Color(nsColor: .separatorColor))
                 .frame(width: 1)
 
             siteInformationPanel
@@ -117,7 +112,7 @@ struct SiteDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(.black.opacity(0.1), lineWidth: 1)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             }
             .padding(18)
     }
@@ -128,7 +123,7 @@ struct SiteDetailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(site.name.uppercased())
                         .font(.system(size: 30, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.primary)
                         .lineLimit(2)
 
                     Text("Start: \(formatted(site.startLatitude)), \(formatted(site.startLongitude))")
@@ -249,12 +244,12 @@ struct SiteDetailView: View {
 
 private extension View {
     func siteDetailCardStyle() -> some View {
-        background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
             .overlay {
                 RoundedRectangle(cornerRadius: 18)
-                    .stroke(.white.opacity(0.58), lineWidth: 1)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+            .shadow(color: .black.opacity(0.08), radius: 14, y: 6)
     }
 }
 
@@ -303,7 +298,11 @@ private struct HydrophoneRow: View {
         }
         .padding(.horizontal, 11)
         .frame(height: 56)
-        .background(.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
+        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        }
         .contextMenu {
             Button("Edit", action: onEdit)
             Button("Delete", role: .destructive) {

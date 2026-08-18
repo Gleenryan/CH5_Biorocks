@@ -52,7 +52,7 @@ struct HydrophoneFormCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(isEditMode ? "EDIT HYDROPHONE" : "ADD HYDROPHONE")
                 .font(.system(size: 24, weight: .heavy))
-                .foregroundColor(.black)
+                .foregroundStyle(.primary)
                 .padding(.bottom, 5)
 
             // Name Field
@@ -77,10 +77,10 @@ struct HydrophoneFormCard: View {
                     .id("\(coord.latitude)_\(coord.longitude)")
                 } else {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.2))
+                        .fill(Color(nsColor: .controlBackgroundColor))
                         .overlay(
                             Text("Enter valid coordinates to preview on map")
-                                .foregroundColor(.gray)
+                                .foregroundStyle(.secondary)
                         )
                 }
             }
@@ -88,7 +88,7 @@ struct HydrophoneFormCard: View {
             .cornerRadius(8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             )
 
             // Buttons
@@ -98,9 +98,9 @@ struct HydrophoneFormCard: View {
                 Button(action: onCancel) {
                     Text("Cancel")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.secondary)
                         .frame(width: 100, height: 40)
-                        .background(Color.black.opacity(0.1))
+                        .background(.secondary.opacity(0.1))
                         .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
@@ -117,7 +117,7 @@ struct HydrophoneFormCard: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(width: 100, height: 40)
-                        .background(Color(hex: "17C3B2")) // Teal color
+                        .background(Color.accentColor)
                         .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
@@ -127,8 +127,11 @@ struct HydrophoneFormCard: View {
             }
         }
         .padding(30)
-        .background(Color(hex: "EEF1F6"))
-        .cornerRadius(12)
+        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        }
         .frame(maxWidth: 500)
         .onAppear {
             if let loc = initialLocation {
@@ -217,10 +220,10 @@ struct HydrophoneFormCard: View {
             }
         }
         .padding(12)
-        .background(Color.black.opacity(0.035), in: RoundedRectangle(cornerRadius: 8))
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
         }
     }
 
@@ -252,11 +255,11 @@ struct CustomTextField: View {
         TextField(placeholder, text: $text)
             .textFieldStyle(.plain)
             .padding()
-            .background(Color.black.opacity(0.03))
+            .background(Color(nsColor: .textBackgroundColor))
             .cornerRadius(6)
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .stroke(Color.black.opacity(0.15), lineWidth: 1)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             )
             .font(.system(size: 16))
     }

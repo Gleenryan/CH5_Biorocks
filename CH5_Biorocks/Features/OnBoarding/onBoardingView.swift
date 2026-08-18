@@ -1,5 +1,5 @@
 //
-//  onBoarding.swift
+//  onBoardingView.swift
 //  CH5_Biorocks
 //
 //  Created by Gleenryan on 12/08/26.
@@ -12,64 +12,38 @@ struct onBoardingView: View {
 
     var body: some View {
         ZStack {
-
-            Image("OnBoardingBackground")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+            Color(nsColor: .windowBackgroundColor)
                 .ignoresSafeArea()
-            
-            HStack {
-                VStack(alignment: .leading, spacing: 15) {
-                    Text("LOREM IPSUM")
-                        .font(.system(size: 60, weight: .heavy))
-                        .foregroundColor(.white)
-                    
-                    Text("\"Thissss is for our Tagline\"")
-                        .font(.largeTitle)
-                        .foregroundColor(.white)
-                    
-                    Rectangle()
-                        .fill(Color.white.opacity(0.6))
-                        .frame(height: 1)
-                        .frame(maxWidth: 300)
-                    
-                    Text("Boom boom bazzz tara taratak boom boom blast\ndhuarrrrrr dherrr dhorrrrrr bhooom kadabhommmmmmm\nsatu dua tiga dhuarrrrrr bhapppppp")
-                        .font(.title)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.leading)
-                    
-                    Button(action: {
-                        onStart()
-                    }) {
-                        Text("Let's Start")
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 53)
-                            .padding(.vertical, 12)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color(hex: 0x1DB7D9), Color(hex: 0x29CBB5)]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(8)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 13)
-                    
+
+            VStack(alignment: .leading, spacing: 24) {
+                Image(systemName: "water.waves")
+                    .font(.system(size: 34, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 72, height: 72)
+                    .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Reef Monitor")
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+
+                    Text("Organize reef Sites, place hydrophones, and verify connected microphone inputs from one native macOS workspace.")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.leading, 56)
-                
-                Spacer()
+
+                Button("Get Started", action: onStart)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .keyboardShortcut(.defaultAction)
             }
+            .frame(maxWidth: 680, alignment: .leading)
+            .padding(56)
         }
-        .frame(minWidth: 540, maxWidth: .infinity, minHeight: 520, maxHeight: .infinity)
-        .ignoresSafeArea()
     }
 }
 
-
 #Preview {
     onBoardingView()
+        .frame(width: 900, height: 650)
 }
