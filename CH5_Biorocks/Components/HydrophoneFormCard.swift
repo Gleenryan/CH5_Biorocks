@@ -55,8 +55,13 @@ struct HydrophoneFormCard: View {
                 .foregroundStyle(.primary)
                 .padding(.bottom, 5)
 
-            // Name Field
-            CustomTextField(text: $name, placeholder: "Name (e.g. Dragon Structure)")
+            // Image placeholder and name field
+            HStack(spacing: 14) {
+                HydrophoneImagePlaceholder(showsLabel: false)
+                    .frame(width: 72, height: 58)
+
+                CustomTextField(text: $name, placeholder: "Name (e.g. Dragon Structure)")
+            }
 
             // Latitude Field
             CustomTextField(text: $latitudeStr, placeholder: "Latitude (e.g. -8.128667)")
@@ -127,11 +132,7 @@ struct HydrophoneFormCard: View {
             }
         }
         .padding(30)
-        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-        }
+        .siteGlassCard(cornerRadius: 12)
         .frame(maxWidth: 500)
         .onAppear {
             if let loc = initialLocation {

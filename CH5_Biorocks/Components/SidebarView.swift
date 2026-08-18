@@ -2,7 +2,7 @@ import SwiftUI
 
 enum SidebarDestination: Hashable {
     case home
-    case alerts
+    case sites
     case microphones
     case site(UUID)
 }
@@ -20,13 +20,13 @@ struct SidebarView: View {
             Section {
                 Label("Home", systemImage: "house")
                     .tag(SidebarDestination.home)
-
-                Label("Alerts", systemImage: "bell")
-                    .tag(SidebarDestination.alerts)
             }
 
             Section {
                 DisclosureGroup(isExpanded: $isSitesExpanded) {
+//                    Label("All Sites", systemImage: "list.bullet")
+//                        .tag(SidebarDestination.sites)
+
                     if sites.isEmpty {
                         Text("No Sites yet")
                             .font(.caption)

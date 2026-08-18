@@ -48,7 +48,12 @@ struct SiteFormOverlay: View {
                 .keyboardShortcut(.cancelAction)
             }
 
-            SiteTextField(title: "Site name", placeholder: "e.g. Pemuteran Reef", text: $name)
+            HStack(alignment: .bottom, spacing: 14) {
+                SiteImagePlaceholder(showsLabel: false)
+                    .frame(width: 82, height: 62)
+
+                SiteTextField(title: "Site name", placeholder: "e.g. Pemuteran Reef", text: $name)
+            }
 
             HStack(alignment: .top, spacing: 22) {
                 coordinateFields(
@@ -91,11 +96,7 @@ struct SiteFormOverlay: View {
         }
         .padding(26)
         .frame(width: 650)
-        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-        }
+        .siteGlassCard(cornerRadius: 18)
         .shadow(color: .black.opacity(0.22), radius: 30, y: 15)
     }
 

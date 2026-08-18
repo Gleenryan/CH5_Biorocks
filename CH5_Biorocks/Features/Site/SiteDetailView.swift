@@ -6,6 +6,7 @@ struct SiteDetailView: View {
 
     let site: Site
 
+    @State private var selectedTab: SiteDetailTab = .overview
     @State private var isPresentingHydrophone = false
     @State private var editingHydrophone: CustomLocation?
 
@@ -17,32 +18,17 @@ struct SiteDetailView: View {
 
     var body: some View {
         ZStack {
-            Color(nsColor: .windowBackgroundColor)
-                .ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 0) {
-                hydrophoneHeader
-
-                Divider()
-
-                GeometryReader { proxy in
-                    ScrollView {
-                        ViewThatFits(in: .horizontal) {
-                            horizontalDetailCard
-                            verticalDetailCard
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, horizontalPadding(for: proxy.size.width))
-                        .padding(.vertical, 32)
-                    }
-                    .scrollIndicators(.hidden)
-                }
+            VStack(alignment: .leading, spacing: 14) {
+                siteHeader
+                tabPicker
+                selectedTabContent
             }
+            .padding(4)
 
             if isPresentingHydrophone {
-                Color.black.opacity(0.48)
+                Color.black.opacity(0.36)
                     .ignoresSafeArea()
-                    .onTapGesture { dismissHydrophoneForm() }
+                    .onTapGesture(perform: dismissHydrophoneForm)
 
                 HydrophoneFormCard(
                     initialLocation: editingHydrophone,
@@ -50,91 +36,132 @@ struct SiteDetailView: View {
                     onSubmit: saveHydrophone
                 )
                 .id(editingHydrophone?.id.uuidString ?? "new-hydrophone")
-                .transition(.scale(scale: 0.94).combined(with: .opacity))
-                .shadow(color: .black.opacity(0.3), radius: 35, y: 18)
+                .transition(.scale(scale: 0.96).combined(with: .opacity))
+                .shadow(color: .black.opacity(0.24), radius: 26, y: 12)
             }
         }
-        .animation(.easeOut(duration: 0.2), value: isPresentingHydrophone)
+        .animation(.easeOut(duration: 0.18), value: isPresentingHydrophone)
     }
 
-    private var hydrophoneHeader: some View {
-        HStack(spacing: 16) {
-            Image(systemName: "mic.fill")
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 52, height: 52)
-                .background(Color.accentColor.opacity(0.12), in: Circle())
+    private var siteHeader: some View {
+        HStack(alignment: .top, spacing: 16) {
+            SiteImagePlaceholder()
+                .frame(width: 102, height: 88)
 
-            Text("HYDROPHONE LIST")
-                .font(.system(size: 42, weight: .medium, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.65)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(site.name)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .lineLimit(2)
 
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 48)
-        .padding(.top, 28)
-        .padding(.bottom, 24)
-    }
+                Text("Reef monitoring Site")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
 
-    private var horizontalDetailCard: some View {
-        HStack(spacing: 0) {
-            mapPanel
-                .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 9) {
+                        coordinateChip(
+                            title: "Start",
+                            latitude: site.startLatitude,
+                            longitude: site.startLongitude
+                        )
+                        coordinateChip(
+                            title: "End",
+                            latitude: site.endLatitude,
+                            longitude: site.endLongitude
+                        )
+                    }
 
-            Rectangle()
-                .fill(Color(nsColor: .separatorColor))
-                .frame(width: 1)
-
-            siteInformationPanel
-                .frame(minWidth: 280, idealWidth: 360, maxWidth: 420, maxHeight: .infinity)
-        }
-        .frame(minHeight: 460)
-        .siteDetailCardStyle()
-    }
-
-    private var verticalDetailCard: some View {
-        VStack(spacing: 0) {
-            mapPanel
-                .frame(height: 300)
-
-            Divider()
-
-            siteInformationPanel
-                .frame(minHeight: 340)
-        }
-        .siteDetailCardStyle()
-    }
-
-    private var mapPanel: some View {
-        SiteMapView(site: site)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+                    VStack(alignment: .leading, spacing: 7) {
+                        coordinateChip(
+                            title: "Start",
+                            latitude: site.startLatitude,
+                            longitude: site.startLongitude
+                        )
+                        coordinateChip(
+                            title: "End",
+                            latitude: site.endLatitude,
+                            longitude: site.endLongitude
+                        )
+                    }
+                }
             }
-            .padding(18)
+
+            Spacer(minLength: 10)
+
+            VStack(alignment: .trailing, spacing: 5) {
+                Label("Online", systemImage: "circle.fill")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.green)
+                    .padding(.horizontal, 12)
+                    .frame(height: 32)
+                    .background(Color.green.opacity(0.12), in: Capsule())
+
+                Text("Demo status")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .help("Online is placeholder data for this prototype")
+        }
+        .padding(18)
+        .siteGlassCard(cornerRadius: 18)
     }
 
-    private var siteInformationPanel: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(site.name.uppercased())
-                        .font(.system(size: 30, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
+    private var tabPicker: some View {
+        Picker("Site Section", selection: $selectedTab) {
+            ForEach(SiteDetailTab.allCases) { tab in
+                Text(tab.title).tag(tab)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(maxWidth: 620, alignment: .leading)
+        .accessibilityLabel("Site section")
+    }
 
-                    Text("Start: \(formatted(site.startLatitude)), \(formatted(site.startLongitude))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+    @ViewBuilder
+    private var selectedTabContent: some View {
+        switch selectedTab {
+        case .overview:
+            ScrollView {
+                SiteOverviewView(site: site, hydrophones: sortedHydrophones)
+                    .padding(4)
+            }
+            .scrollIndicators(.hidden)
 
-                    Text("End: \(formatted(site.endLatitude)), \(formatted(site.endLongitude))")
-                        .font(.caption)
+        case .sensors:
+            ScrollView {
+                sensorsContent
+                    .padding(4)
+            }
+            .scrollIndicators(.hidden)
+
+        case .alerts:
+            emptyTab(
+                title: "No Site Alerts",
+                description: "Alert monitoring has not been connected for this Site yet.",
+                systemImage: "bell.slash"
+            )
+
+        case .coralHealth:
+            emptyTab(
+                title: "No Coral Health Data",
+                description: "Coral health observations will appear here when this feature is connected.",
+                systemImage: "waveform.path.ecg"
+            )
+        }
+    }
+
+    private var sensorsContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Hydrophone Sensors")
+                        .font(.title3.bold())
+
+                    Text("Manage microphones and their positions for this Site.")
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
-                .layoutPriority(1)
 
                 Spacer()
 
@@ -144,59 +171,86 @@ struct SiteDetailView: View {
                 } label: {
                     Label("Add Hydrophone", systemImage: "plus")
                 }
-                .buttonStyle(SitePrimaryButtonStyle())
-                .help("Add Hydrophone")
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             }
+
+            SiteMapView(site: site)
+                .frame(minHeight: 250)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
 
             Divider()
 
             HStack {
-                Text("HYDROPHONES")
-                    .font(.system(size: 15, weight: .bold))
+                Text("Sensors")
+                    .font(.headline)
+
+                Text("\(sortedHydrophones.count)")
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.accentColor.opacity(0.12), in: Capsule())
 
                 Spacer()
-
-                Text("\(sortedHydrophones.count) installed")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             if sortedHydrophones.isEmpty {
-                VStack(spacing: 10) {
-                    Spacer()
-                    Image(systemName: "mic.slash")
-                        .font(.system(size: 30))
-                    Text("No hydrophones in this Site")
-                        .font(.headline)
-                    Text("Add a hydrophone to display it on the map.")
-                        .font(.caption)
-                        .multilineTextAlignment(.center)
-                    Spacer()
+                ContentUnavailableView {
+                    Label("No Hydrophones", systemImage: "mic.slash")
+                } description: {
+                    Text("Use Add Hydrophone to connect a microphone and position it on the map.")
                 }
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: 180)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 9) {
-                        ForEach(sortedHydrophones) { hydrophone in
-                            HydrophoneRow(
-                                hydrophone: hydrophone,
-                                onEdit: {
-                                    editingHydrophone = hydrophone
-                                    isPresentingHydrophone = true
-                                },
-                                onDelete: {
-                                    modelContext.delete(hydrophone)
-                                }
-                            )
-                        }
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 250), spacing: 12)],
+                    spacing: 12
+                ) {
+                    ForEach(sortedHydrophones) { hydrophone in
+                        HydrophoneRow(
+                            hydrophone: hydrophone,
+                            onEdit: {
+                                editingHydrophone = hydrophone
+                                isPresentingHydrophone = true
+                            },
+                            onDelete: {
+                                modelContext.delete(hydrophone)
+                            }
+                        )
                     }
                 }
-                .scrollIndicators(.hidden)
             }
         }
-        .padding(22)
-        .frame(maxHeight: .infinity)
+        .padding(18)
+        .siteGlassCard(cornerRadius: 18)
+    }
+
+    private func emptyTab(
+        title: String,
+        description: String,
+        systemImage: String
+    ) -> some View {
+        ContentUnavailableView {
+            Label(title, systemImage: systemImage)
+        } description: {
+            Text(description)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .siteGlassCard(cornerRadius: 18)
+    }
+
+    private func coordinateChip(title: String, latitude: Double, longitude: Double) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+                .fontWeight(.semibold)
+            Text("\(formatted(latitude)), \(formatted(longitude))")
+                .foregroundStyle(.secondary)
+        }
+        .font(.caption)
+        .padding(.horizontal, 10)
+        .frame(height: 28)
+        .glassEffect(.regular, in: .capsule)
     }
 
     private func saveHydrophone(
@@ -235,21 +289,23 @@ struct SiteDetailView: View {
     private func formatted(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(4)))
     }
-
-    private func horizontalPadding(for width: CGFloat) -> CGFloat {
-        min(max(32, width * 0.04), 64)
-    }
-
 }
 
-private extension View {
-    func siteDetailCardStyle() -> some View {
-        background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.08), radius: 14, y: 6)
+private enum SiteDetailTab: String, CaseIterable, Identifiable {
+    case overview
+    case sensors
+    case alerts
+    case coralHealth
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .overview: "Overview"
+        case .sensors: "Sensors"
+        case .alerts: "Alerts"
+        case .coralHealth: "Coral Health"
+        }
     }
 }
 
@@ -261,28 +317,33 @@ private struct HydrophoneRow: View {
     @State private var isConfirmingDeletion = false
 
     var body: some View {
-        HStack(spacing: 11) {
-            Image(systemName: "mic.fill")
-                .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(Color(hex: "17C3B2"), in: Circle())
+        HStack(spacing: 12) {
+            HydrophoneImagePlaceholder()
+                .frame(width: 52, height: 52)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(hydrophone.name)
                     .font(.system(size: 14, weight: .semibold))
                     .lineLimit(1)
+
                 Text("\(hydrophone.latitude.formatted(.number.precision(.fractionLength(4)))), \(hydrophone.longitude.formatted(.number.precision(.fractionLength(4))))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+
+                if let microphoneName = hydrophone.microphoneDeviceName {
+                    Text(microphoneName)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
             }
 
-            Spacer()
+            Spacer(minLength: 0)
 
             HStack(spacing: 10) {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
                 .help("Edit Hydrophone")
@@ -295,14 +356,10 @@ private struct HydrophoneRow: View {
                 .buttonStyle(.plain)
                 .help("Delete Hydrophone")
             }
+            .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 11)
-        .frame(height: 56)
-        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-        }
+        .padding(12)
+        .siteGlassCard(cornerRadius: 14)
         .contextMenu {
             Button("Edit", action: onEdit)
             Button("Delete", role: .destructive) {
@@ -324,13 +381,14 @@ private struct HydrophoneRow: View {
 #Preview {
     SiteDetailView(
         site: Site(
-            name: "Pemuteran Reef",
-            startLatitude: -8.1287,
-            startLongitude: 114.6608,
-            endLatitude: -8.1402,
-            endLongitude: 114.6721
+            name: "Nusa Penida (Demo)",
+            startLatitude: -8.7270,
+            startLongitude: 115.5440,
+            endLatitude: -8.7205,
+            endLongitude: 115.5530
         )
     )
     .modelContainer(for: [Site.self, CustomLocation.self], inMemory: true)
-    .frame(width: 1000, height: 700)
+    .frame(width: 900, height: 760)
+    .padding()
 }
