@@ -88,19 +88,7 @@ struct SiteDetailView: View {
 
             Spacer(minLength: 10)
 
-            VStack(alignment: .trailing, spacing: 5) {
-                Label("Online", systemImage: "circle.fill")
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.green)
-                    .padding(.horizontal, 12)
-                    .frame(height: 32)
-                    .background(Color.green.opacity(0.12), in: Capsule())
-
-                Text("Demo status")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            .help("Online is placeholder data for this prototype")
+            LiveStatusBadge(siteName: site.name)
         }
         .padding(18)
         .siteGlassCard(cornerRadius: 18)
@@ -136,18 +124,10 @@ struct SiteDetailView: View {
             .scrollIndicators(.hidden)
 
         case .alerts:
-            emptyTab(
-                title: "No Site Alerts",
-                description: "Alert monitoring has not been connected for this Site yet.",
-                systemImage: "bell.slash"
-            )
+            AlertsView(siteName: site.name)
 
         case .coralHealth:
-            emptyTab(
-                title: "No Coral Health Data",
-                description: "Coral health observations will appear here when this feature is connected.",
-                systemImage: "waveform.path.ecg"
-            )
+            CoralHealthView(siteName: site.name)
         }
     }
 
@@ -199,7 +179,7 @@ struct SiteDetailView: View {
                 ContentUnavailableView {
                     Label("No Hydrophones", systemImage: "mic.slash")
                 } description: {
-                    Text("Use Add Hydrophone to connect a microphone and position it on the map.")
+                    Text("Add a hydrophone, or run the Python simulator — detected streams appear here automatically.")
                 }
                 .frame(maxWidth: .infinity, minHeight: 180)
             } else {
@@ -223,20 +203,6 @@ struct SiteDetailView: View {
             }
         }
         .padding(18)
-        .siteGlassCard(cornerRadius: 18)
-    }
-
-    private func emptyTab(
-        title: String,
-        description: String,
-        systemImage: String
-    ) -> some View {
-        ContentUnavailableView {
-            Label(title, systemImage: systemImage)
-        } description: {
-            Text(description)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .siteGlassCard(cornerRadius: 18)
     }
 
@@ -314,24 +280,93 @@ private struct HydrophoneRow: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
 
+    @EnvironmentObject private var store: DetectionStore
+    @EnvironmentObject private var hub: HydrophoneHub
+    @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse) private var events: [BlastDetectionEvent]
     @State private var isConfirmingDeletion = false
+
+    private var liveStatus: LiveHydrophoneStatus? {
+        store.liveHydrophones.first { status in
+            status.simulatorDeviceID == hydrophone.microphoneDeviceID
+                || (status.name.localizedCaseInsensitiveCompare(hydrophone.name) == .orderedSame
+                    && status.siteName.localizedCaseInsensitiveCompare(hydrophone.site?.name ?? "") == .orderedSame)
+        }
+    }
+
+    private var isLive: Bool { liveStatus?.connected == true }
+    private var hydrophoneAudioID: String? { liveStatus?.id }
+    private var isListening: Bool {
+        guard let hydrophoneAudioID else { return false }
+        return store.listeningHydrophoneID == hydrophoneAudioID
+    }
+
+    private var blastEvent: BlastDetectionEvent? {
+        let deviceID = hydrophone.microphoneDeviceID ?? ""
+        let simID = deviceID.hasPrefix("sim://") ? String(deviceID.dropFirst(6)) : deviceID
+        return events.first { event in
+            event.hydrophoneId.caseInsensitiveCompare(simID) == .orderedSame
+                || event.hydrophoneId.caseInsensitiveCompare(deviceID) == .orderedSame
+                || (
+                    event.hydrophoneName.localizedCaseInsensitiveCompare(hydrophone.name) == .orderedSame
+                        && event.siteName.localizedCaseInsensitiveCompare(hydrophone.site?.name ?? "") == .orderedSame
+                )
+        }
+    }
+
+    private var hasBlast: Bool { blastEvent != nil }
 
     var body: some View {
         HStack(spacing: 12) {
-            HydrophoneImagePlaceholder()
-                .frame(width: 52, height: 52)
+            waveformOrPlaceholder
+                .frame(width: 88, height: 52)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(hydrophone.name)
-                    .font(.system(size: 14, weight: .semibold))
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(hydrophone.name)
+                        .font(.system(size: 14, weight: .semibold))
+                        .lineLimit(1)
+
+                    if hydrophone.microphoneDeviceID?.hasPrefix("sim://") == true {
+                        Text(isLive ? "Detected" : "Simulator")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(isLive ? Color.green : Color.secondary)
+                            .padding(.horizontal, 6)
+                            .frame(height: 16)
+                            .background((isLive ? Color.green : Color.secondary).opacity(0.14), in: Capsule())
+                    }
+
+                    if hasBlast {
+                        Text("BLAST")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Color.red)
+                            .padding(.horizontal, 6)
+                            .frame(height: 16)
+                            .background(Color.red.opacity(0.16), in: Capsule())
+                    }
+                }
 
                 Text("\(hydrophone.latitude.formatted(.number.precision(.fractionLength(4)))), \(hydrophone.longitude.formatted(.number.precision(.fractionLength(4))))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
-                if let microphoneName = hydrophone.microphoneDeviceName {
+                if let blastEvent {
+                    Text("Blast alert · P \(blastEvent.pBlast.formatted(.number.precision(.fractionLength(3)))) · \(blastEvent.onsetTime.formatted(date: .omitted, time: .shortened))")
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                        .lineLimit(1)
+                }
+                if isLive, let rms = liveStatus?.lastRMS {
+                    Text(String(format: "Live audio · rms %.3f", rms))
+                        .font(.caption2)
+                        .foregroundStyle(.green)
+                        .lineLimit(1)
+                } else if liveStatus != nil, store.hasClip[liveStatus?.id ?? ""] == true {
+                    Text("Scenario audio attached")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                } else if let microphoneName = hydrophone.microphoneDeviceName {
                     Text(microphoneName)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
@@ -342,6 +377,10 @@ private struct HydrophoneRow: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 10) {
+                if let hydrophoneAudioID {
+                    audioControl(id: hydrophoneAudioID)
+                }
+
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
                 }
@@ -360,6 +399,15 @@ private struct HydrophoneRow: View {
         }
         .padding(12)
         .siteGlassCard(cornerRadius: 14)
+        .overlay {
+            if hasBlast {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.red.opacity(0.55), lineWidth: 1.5)
+            } else if isLive {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.green.opacity(0.45), lineWidth: 1.5)
+            }
+        }
         .contextMenu {
             Button("Edit", action: onEdit)
             Button("Delete", role: .destructive) {
@@ -376,19 +424,76 @@ private struct HydrophoneRow: View {
             Text("This hydrophone will be permanently removed from this Site.")
         }
     }
+
+    @ViewBuilder
+    private var waveformOrPlaceholder: some View {
+        if let id = hydrophoneAudioID, !store.envelope(for: id).isEmpty {
+            LiveWaveformView(samples: store.envelope(for: id), isLive: isLive)
+        } else {
+            HydrophoneImagePlaceholder()
+        }
+    }
+
+    @ViewBuilder
+    private func audioControl(id: String) -> some View {
+        if isLive {
+            Button {
+                hub.toggleListen(hydrophoneID: id)
+            } label: {
+                Image(systemName: isListening ? "speaker.wave.2.fill" : "speaker.wave.2")
+                    .foregroundStyle(isListening ? Color.green : Color.secondary)
+            }
+            .buttonStyle(.plain)
+            .help(isListening ? "Mute this hydrophone" : "Listen to this hydrophone")
+        } else if store.hasClip[id] == true {
+            Button {
+                hub.replay(hydrophoneID: id)
+            } label: {
+                Image(systemName: "play.fill")
+            }
+            .buttonStyle(.plain)
+            .help("Replay attached scenario audio")
+        }
+    }
+}
+
+private struct LiveStatusBadge: View {
+    let siteName: String
+    @EnvironmentObject private var store: DetectionStore
+
+    private var isLive: Bool {
+        store.liveHydrophones.contains { $0.siteName == siteName && $0.connected }
+    }
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 5) {
+            Label(isLive ? "Live" : "Idle", systemImage: "circle.fill")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(isLive ? Color.green : Color.secondary)
+                .padding(.horizontal, 12)
+                .frame(height: 32)
+                .background((isLive ? Color.green : Color.secondary).opacity(0.12), in: Capsule())
+
+            Text(isLive ? "Hydrophone streaming" : "No live stream")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+    }
 }
 
 #Preview {
     SiteDetailView(
         site: Site(
-            name: "Nusa Penida (Demo)",
-            startLatitude: -8.7270,
-            startLongitude: 115.5440,
-            endLatitude: -8.7205,
-            endLongitude: 115.5530
+            name: "Pemuteran",
+            startLatitude: -8.1287,
+            startLongitude: 114.6608,
+            endLatitude: -8.1322,
+            endLongitude: 114.6715
         )
     )
-    .modelContainer(for: [Site.self, CustomLocation.self], inMemory: true)
+    .environmentObject(DetectionStore())
+    .environmentObject(HydrophoneHub())
+    .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
     .frame(width: 900, height: 760)
     .padding()
 }

@@ -5,7 +5,7 @@ struct SiteFormOverlay: View {
     var onCancel: () -> Void
     var onSubmit: (String, Double, Double, Double, Double) -> Void
 
-    @State private var name = "Pemuteran Reef Site"
+    @State private var name = ""
     @State private var startLatitude = "-8.128667"
     @State private var startLongitude = "114.660816"
     @State private var endLatitude = "-8.132200"
