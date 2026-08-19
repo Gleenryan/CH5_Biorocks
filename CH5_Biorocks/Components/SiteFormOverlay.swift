@@ -57,13 +57,13 @@ struct SiteFormOverlay: View {
 
             HStack(alignment: .top, spacing: 22) {
                 coordinateFields(
-                    title: "START COORDINATE",
+                    title: "START",
                     latitude: $startLatitude,
                     longitude: $startLongitude
                 )
 
                 coordinateFields(
-                    title: "END COORDINATE",
+                    title: "FINISH",
                     latitude: $endLatitude,
                     longitude: $endLongitude
                 )
@@ -120,12 +120,23 @@ struct SiteFormOverlay: View {
     private var mapPreview: some View {
         if let start = parsedStartCoordinate, let end = parsedEndCoordinate {
             Map {
-                Marker("Start", systemImage: "flag.fill", coordinate: start)
+                MapCircle(
+                    center: SiteCoverageGeometry.center(between: start, and: end),
+                    radius: max(SiteCoverageGeometry.radius(between: start, and: end), 1)
+                )
+                .foregroundStyle(Color(hex: "17C3B2").opacity(0.16))
+                .stroke(Color(hex: "17C3B2"), lineWidth: 3)
+
+                Marker(
+                    "Center",
+                    systemImage: "scope",
+                    coordinate: SiteCoverageGeometry.center(between: start, and: end)
+                )
                     .tint(Color(hex: "1DB7D9"))
-                Marker("End", systemImage: "flag.checkered", coordinate: end)
+                Marker("Start", systemImage: "circle.fill", coordinate: start)
                     .tint(Color(hex: "29CBB5"))
-                MapPolyline(coordinates: [start, end])
-                    .stroke(Color(hex: "17C3B2"), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                Marker("Finish", systemImage: "circle.fill", coordinate: end)
+                    .tint(Color(hex: "29CBB5"))
             }
             .mapStyle(.standard)
             .id("\(start.latitude)-\(start.longitude)-\(end.latitude)-\(end.longitude)")
@@ -135,7 +146,7 @@ struct SiteFormOverlay: View {
                 VStack(spacing: 8) {
                     Image(systemName: "map")
                         .font(.system(size: 28))
-                    Text("Enter valid start and end coordinates to preview the Site")
+                        Text("Enter valid Start and Finish coordinates to preview the Site")
                         .font(.callout)
                 }
                 .foregroundStyle(.secondary)

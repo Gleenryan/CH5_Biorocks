@@ -65,7 +65,7 @@ struct SiteDetailView: View {
                             longitude: site.startLongitude
                         )
                         coordinateChip(
-                            title: "End",
+                            title: "Finish",
                             latitude: site.endLatitude,
                             longitude: site.endLongitude
                         )
@@ -78,7 +78,7 @@ struct SiteDetailView: View {
                             longitude: site.startLongitude
                         )
                         coordinateChip(
-                            title: "End",
+                            title: "Finish",
                             latitude: site.endLatitude,
                             longitude: site.endLongitude
                         )
