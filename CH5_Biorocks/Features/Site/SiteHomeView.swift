@@ -56,7 +56,7 @@ struct SiteHomeView: View {
                         )
                 }
             }
-            .mapStyle(.standard)
+            .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .mapControls {
                 MapCompass()
                 MapScaleView()

@@ -3,9 +3,10 @@ import MapKit
 
 struct SiteMapView: View {
     let site: Site
+    @State private var cameraPosition: MapCameraPosition = .automatic
 
     var body: some View {
-        Map {
+        Map(position: $cameraPosition) {
             Marker("Start", systemImage: "flag.fill", coordinate: site.startCoordinate)
                 .tint(Color(hex: "1DB7D9"))
 
@@ -20,11 +21,14 @@ struct SiteMapView: View {
                     .tint(.orange)
             }
         }
-        .mapStyle(.standard)
+        .mapStyle(.standard(pointsOfInterest: .excludingAll))
         .mapControls {
             MapCompass()
             MapScaleView()
             MapPitchToggle()
+        }
+        .onChange(of: site.id) {
+            cameraPosition = .automatic
         }
     }
 }
