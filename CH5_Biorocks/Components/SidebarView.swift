@@ -3,7 +3,6 @@ import SwiftUI
 enum SidebarDestination: Hashable {
     case home
     case sites
-    case microphones
     case simulator
     case alerts
     case site(UUID)
@@ -40,8 +39,9 @@ struct SidebarView: View {
                                 Text(site.name)
                                     .lineLimit(1)
                             } icon: {
-                                Image(systemName: "water.waves")
-                                    .foregroundStyle(Color.accentColor)
+                                Image(systemName: "circle.fill")
+                                    .font(.caption2)
+                                    .foregroundStyle(.blue)
                             }
                             .tag(SidebarDestination.site(site.id))
                             .contextMenu {
@@ -65,8 +65,6 @@ struct SidebarView: View {
             }
 
             Section("Tools") {
-                Label("Microphones", systemImage: "mic")
-                    .tag(SidebarDestination.microphones)
                 Label("Simulator", systemImage: "waveform.path.ecg")
                     .tag(SidebarDestination.simulator)
                 Label("Alerts", systemImage: "bell")

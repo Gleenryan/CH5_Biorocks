@@ -10,6 +10,9 @@ struct SiteFormOverlay: View {
     @State private var startLongitude = "114.660816"
     @State private var endLatitude = "-8.132200"
     @State private var endLongitude = "114.671500"
+    @State private var selectedMapPoint: SiteFormMapPoint?
+
+    private let mapCoordinateSpace = "site-form-map"
 
     private var parsedStartCoordinate: CLLocationCoordinate2D? {
         coordinate(latitude: startLatitude, longitude: startLongitude)
@@ -57,13 +60,13 @@ struct SiteFormOverlay: View {
 
             HStack(alignment: .top, spacing: 22) {
                 coordinateFields(
-                    title: "START COORDINATE",
+                    title: "START",
                     latitude: $startLatitude,
                     longitude: $startLongitude
                 )
 
                 coordinateFields(
-                    title: "END COORDINATE",
+                    title: "FINISH",
                     latitude: $endLatitude,
                     longitude: $endLongitude
                 )
@@ -119,28 +122,138 @@ struct SiteFormOverlay: View {
     @ViewBuilder
     private var mapPreview: some View {
         if let start = parsedStartCoordinate, let end = parsedEndCoordinate {
-            Map {
-                Marker("Start", systemImage: "flag.fill", coordinate: start)
-                    .tint(Color(hex: "1DB7D9"))
-                Marker("End", systemImage: "flag.checkered", coordinate: end)
-                    .tint(Color(hex: "29CBB5"))
-                MapPolyline(coordinates: [start, end])
-                    .stroke(Color(hex: "17C3B2"), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+            MapReader { proxy in
+                ZStack(alignment: .topLeading) {
+                    Map(interactionModes: selectedMapPoint == nil ? .all : []) {
+                        MapCircle(
+                            center: SiteCoverageGeometry.center(between: start, and: end),
+                            radius: max(SiteCoverageGeometry.radius(between: start, and: end), 1)
+                        )
+                        .foregroundStyle(Color(hex: "17C3B2").opacity(0.16))
+                        .stroke(Color(hex: "17C3B2"), lineWidth: 3)
+
+                        Annotation("", coordinate: start) {
+                            mapMarker(
+                                title: "Start",
+                                systemImage: "s.circle.fill",
+                                isSelected: selectedMapPoint == .start
+                            )
+                            .highPriorityGesture(
+                                TapGesture(count: 2)
+                                    .onEnded { selectedMapPoint = .start }
+                            )
+                        }
+
+                        Annotation("", coordinate: end) {
+                            mapMarker(
+                                title: "Finish",
+                                systemImage: "f.circle.fill",
+                                isSelected: selectedMapPoint == .finish
+                            )
+                            .highPriorityGesture(
+                                TapGesture(count: 2)
+                                    .onEnded { selectedMapPoint = .finish }
+                            )
+                        }
+                    }
+                    .mapStyle(.standard)
+
+                    if let selectedMapPoint {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .gesture(placementGesture(using: proxy))
+
+                        Label(
+                            "Move \(selectedMapPoint.title), then release to confirm",
+                            systemImage: "cursorarrow.motionlines"
+                        )
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(.regularMaterial, in: Capsule())
+                        .padding(10)
+                        .allowsHitTesting(false)
+                    } else {
+                        Label("Double-click Start or Finish to move it", systemImage: "cursorarrow.click.2")
+                            .font(.caption.weight(.medium))
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(.regularMaterial, in: Capsule())
+                            .padding(10)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .coordinateSpace(.named(mapCoordinateSpace))
             }
-            .mapStyle(.standard)
-            .id("\(start.latitude)-\(start.longitude)-\(end.latitude)-\(end.longitude)")
         } else {
             ZStack {
                 Color(nsColor: .controlBackgroundColor)
                 VStack(spacing: 8) {
                     Image(systemName: "map")
                         .font(.system(size: 28))
-                    Text("Enter valid start and end coordinates to preview the Site")
+                        Text("Enter valid Start and Finish coordinates to preview the Site")
                         .font(.callout)
                 }
                 .foregroundStyle(.secondary)
             }
         }
+    }
+
+    private func mapMarker(title: String, systemImage: String, isSelected: Bool) -> some View {
+        VStack(spacing: 2) {
+            Image(systemName: systemImage)
+                .font(.system(size: isSelected ? 30 : 25, weight: .semibold))
+                .foregroundStyle(.white, isSelected ? Color.accentColor : Color(hex: "29CBB5"))
+                .shadow(color: isSelected ? Color.accentColor.opacity(0.7) : .black.opacity(0.25), radius: isSelected ? 7 : 2, y: 1)
+
+            Text(title)
+                .font(.caption2.bold())
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(.regularMaterial, in: Capsule())
+        }
+        .contentShape(Rectangle())
+        .animation(.easeOut(duration: 0.15), value: isSelected)
+    }
+
+    private func placementGesture(using proxy: MapProxy) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named(mapCoordinateSpace))
+            .onChanged { value in
+                guard let coordinate = proxy.convert(value.location, from: .named(mapCoordinateSpace)) else {
+                    return
+                }
+
+                switch selectedMapPoint {
+                case nil:
+                    break
+                case .some(.start):
+                    updateStartCoordinate(coordinate)
+                case .some(.finish):
+                    updateEndCoordinate(coordinate)
+                }
+            }
+            .onEnded { _ in
+                selectedMapPoint = nil
+            }
+    }
+
+    private func updateStartCoordinate(_ coordinate: CLLocationCoordinate2D) {
+        startLatitude = formattedCoordinate(coordinate.latitude)
+        startLongitude = formattedCoordinate(coordinate.longitude)
+    }
+
+    private func updateEndCoordinate(_ coordinate: CLLocationCoordinate2D) {
+        endLatitude = formattedCoordinate(coordinate.latitude)
+        endLongitude = formattedCoordinate(coordinate.longitude)
+    }
+
+    private func formattedCoordinate(_ value: CLLocationDegrees) -> String {
+        value.formatted(
+            .number
+                .locale(Locale(identifier: "en_US_POSIX"))
+                .precision(.fractionLength(6))
+                .grouping(.never)
+        )
     }
 
     private func coordinate(latitude: String, longitude: String) -> CLLocationCoordinate2D? {
@@ -159,6 +272,18 @@ struct SiteFormOverlay: View {
     private func submit() {
         guard let start = parsedStartCoordinate, let end = parsedEndCoordinate, isValid else { return }
         onSubmit(trimmedName, start.latitude, start.longitude, end.latitude, end.longitude)
+    }
+}
+
+private enum SiteFormMapPoint: Hashable {
+    case start
+    case finish
+
+    var title: String {
+        switch self {
+        case .start: "Start"
+        case .finish: "Finish"
+        }
     }
 }
 
