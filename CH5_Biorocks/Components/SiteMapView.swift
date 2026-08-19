@@ -14,9 +14,6 @@ struct SiteMapView: View {
             .foregroundStyle(Color(hex: "17C3B2").opacity(0.16))
             .stroke(Color(hex: "17C3B2"), lineWidth: 3)
 
-            Marker("Center", systemImage: "scope", coordinate: site.coverageCenterCoordinate)
-                .tint(Color(hex: "1DB7D9"))
-
             Marker("Start", systemImage: "circle.fill", coordinate: site.startCoordinate)
                 .tint(Color(hex: "29CBB5"))
 
