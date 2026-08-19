@@ -73,9 +73,9 @@ struct SiteOverviewView: View {
                 systemImage: "bell"
             )
             OverviewSummaryRow(
-                title: "Coverage radius",
-                value: coverageRadius,
-                systemImage: "circle"
+                title: "Route length",
+                value: routeLength,
+                systemImage: "point.topleft.down.to.point.bottomright.curvepath"
             )
             Spacer(minLength: 0)
         }
@@ -204,8 +204,10 @@ struct SiteOverviewView: View {
         return latest.formatted(.relative(presentation: .named))
     }
 
-    private var coverageRadius: String {
-        let meters = site.coverageRadiusMeters
+    private var routeLength: String {
+        let start = CLLocation(latitude: site.startLatitude, longitude: site.startLongitude)
+        let end = CLLocation(latitude: site.endLatitude, longitude: site.endLongitude)
+        let meters = start.distance(from: end)
         if meters >= 1_000 {
             return "\((meters / 1_000).formatted(.number.precision(.fractionLength(1)))) km"
         }

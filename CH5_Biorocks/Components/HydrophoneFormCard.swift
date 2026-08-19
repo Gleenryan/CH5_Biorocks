@@ -4,9 +4,6 @@ import AVFoundation
 
 struct HydrophoneFormCard: View {
     var initialLocation: CustomLocation?
-    var defaultCoordinate: CLLocationCoordinate2D
-    var siteCoverageCenter: CLLocationCoordinate2D
-    var siteCoverageRadiusMeters: CLLocationDistance
 
     // Callbacks
     var onCancel: () -> Void
@@ -18,17 +15,11 @@ struct HydrophoneFormCard: View {
     @State private var longitudeStr: String = ""
     @State private var microphones: [MicrophoneDevice] = []
     @State private var selectedMicrophoneID = ""
-    @State private var isPlacingOnMap = false
     @StateObject private var microphoneTester = MicrophoneInputTester()
-
-    private let mapCoordinateSpace = "hydrophone-form-map"
 
     // Derived Coordinate for the Map
     private var currentCoordinate: CLLocationCoordinate2D? {
-        if let lat = Double(latitudeStr),
-           let lon = Double(longitudeStr),
-           (-90...90).contains(lat),
-           (-180...180).contains(lon) {
+        if let lat = Double(latitudeStr), let lon = Double(longitudeStr) {
             return CLLocationCoordinate2D(latitude: lat, longitude: lon)
         }
         return nil
@@ -83,52 +74,12 @@ struct HydrophoneFormCard: View {
             // Map Preview
             ZStack {
                 if let coord = currentCoordinate {
-                    MapReader { proxy in
-                        ZStack(alignment: .topLeading) {
-                            Map(
-                                bounds: MapCameraBounds(minimumDistance: 250, maximumDistance: 50_000),
-                                interactionModes: isPlacingOnMap ? [] : .all
-                            ) {
-                                MapCircle(
-                                    center: siteCoverageCenter,
-                                    radius: max(siteCoverageRadiusMeters, 1)
-                                )
-                                .foregroundStyle(Color(hex: "17C3B2").opacity(0.14))
-                                .stroke(Color(hex: "17C3B2"), lineWidth: 2)
-
-                                Annotation("", coordinate: coord) {
-                                    hydrophoneMapMarker
-                                        .highPriorityGesture(
-                                            TapGesture(count: 2)
-                                                .onEnded { isPlacingOnMap = true }
-                                        )
-                                }
-                            }
-
-                            if isPlacingOnMap {
-                                Color.clear
-                                    .contentShape(Rectangle())
-                                    .gesture(placementGesture(using: proxy))
-
-                                Label("Move the microphone, then release to confirm", systemImage: "cursorarrow.motionlines")
-                                    .font(.caption.weight(.medium))
-                                    .padding(.horizontal, 10)
-                                    .frame(height: 28)
-                                    .background(.regularMaterial, in: Capsule())
-                                    .padding(10)
-                                    .allowsHitTesting(false)
-                            } else {
-                                Label("Double-click the microphone to move it", systemImage: "cursorarrow.click.2")
-                                    .font(.caption.weight(.medium))
-                                    .padding(.horizontal, 10)
-                                    .frame(height: 28)
-                                    .background(.regularMaterial, in: Capsule())
-                                    .padding(10)
-                                    .allowsHitTesting(false)
-                            }
-                        }
-                        .coordinateSpace(.named(mapCoordinateSpace))
+                    Map(bounds: MapCameraBounds(minimumDistance: 1000, maximumDistance: 5000)) {
+                        Marker(name, coordinate: coord)
+                            .tint(.red)
                     }
+                    // Force the map to center on the coordinate whenever it changes
+                    .id("\(coord.latitude)_\(coord.longitude)")
                 } else {
                     Rectangle()
                         .fill(Color(nsColor: .controlBackgroundColor))
@@ -188,9 +139,6 @@ struct HydrophoneFormCard: View {
                 name = loc.name
                 latitudeStr = String(loc.latitude)
                 longitudeStr = String(loc.longitude)
-            } else {
-                latitudeStr = formattedCoordinate(defaultCoordinate.latitude)
-                longitudeStr = formattedCoordinate(defaultCoordinate.longitude)
             }
             refreshMicrophones()
         }
@@ -206,47 +154,6 @@ struct HydrophoneFormCard: View {
         .onDisappear {
             microphoneTester.stopTest()
         }
-    }
-
-    private var hydrophoneMapMarker: some View {
-        VStack(spacing: 2) {
-            Image(systemName: "mic.circle.fill")
-                .font(.system(size: isPlacingOnMap ? 32 : 28, weight: .semibold))
-                .foregroundStyle(.white, isPlacingOnMap ? Color.accentColor : .orange)
-                .shadow(color: isPlacingOnMap ? Color.accentColor.opacity(0.7) : .black.opacity(0.25), radius: isPlacingOnMap ? 7 : 2, y: 1)
-
-            Text(trimmedName.isEmpty ? "Hydrophone" : trimmedName)
-                .font(.caption2.bold())
-                .lineLimit(1)
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2)
-                .background(.regularMaterial, in: Capsule())
-        }
-        .contentShape(Rectangle())
-        .animation(.easeOut(duration: 0.15), value: isPlacingOnMap)
-    }
-
-    private func placementGesture(using proxy: MapProxy) -> some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named(mapCoordinateSpace))
-            .onChanged { value in
-                guard let coordinate = proxy.convert(value.location, from: .named(mapCoordinateSpace)) else {
-                    return
-                }
-                latitudeStr = formattedCoordinate(coordinate.latitude)
-                longitudeStr = formattedCoordinate(coordinate.longitude)
-            }
-            .onEnded { _ in
-                isPlacingOnMap = false
-            }
-    }
-
-    private func formattedCoordinate(_ value: CLLocationDegrees) -> String {
-        value.formatted(
-            .number
-                .locale(Locale(identifier: "en_US_POSIX"))
-                .precision(.fractionLength(6))
-                .grouping(.never)
-        )
     }
 
     private var microphoneInputSection: some View {
@@ -362,9 +269,6 @@ struct CustomTextField: View {
 #Preview {
     HydrophoneFormCard(
         initialLocation: nil,
-        defaultCoordinate: CLLocationCoordinate2D(latitude: -8.128667, longitude: 114.660816),
-        siteCoverageCenter: CLLocationCoordinate2D(latitude: -8.128667, longitude: 114.660816),
-        siteCoverageRadiusMeters: 600,
         onCancel: {},
         onSubmit: { _, _, _, _, _ in }
     )

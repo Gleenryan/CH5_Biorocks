@@ -9,7 +9,6 @@ struct SiteDetailView: View {
     @State private var selectedTab: SiteDetailTab = .overview
     @State private var isPresentingHydrophone = false
     @State private var editingHydrophone: CustomLocation?
-    @State private var hydrophoneMapRefreshID = UUID()
 
     private var sortedHydrophones: [CustomLocation] {
         site.hydrophones.sorted {
@@ -33,9 +32,6 @@ struct SiteDetailView: View {
 
                 HydrophoneFormCard(
                     initialLocation: editingHydrophone,
-                    defaultCoordinate: site.coverageCenterCoordinate,
-                    siteCoverageCenter: site.coverageCenterCoordinate,
-                    siteCoverageRadiusMeters: site.coverageRadiusMeters,
                     onCancel: dismissHydrophoneForm,
                     onSubmit: saveHydrophone
                 )
@@ -69,7 +65,7 @@ struct SiteDetailView: View {
                             longitude: site.startLongitude
                         )
                         coordinateChip(
-                            title: "Finish",
+                            title: "End",
                             latitude: site.endLatitude,
                             longitude: site.endLongitude
                         )
@@ -82,7 +78,7 @@ struct SiteDetailView: View {
                             longitude: site.startLongitude
                         )
                         coordinateChip(
-                            title: "Finish",
+                            title: "End",
                             latitude: site.endLatitude,
                             longitude: site.endLongitude
                         )
@@ -160,7 +156,6 @@ struct SiteDetailView: View {
             }
 
             SiteMapView(site: site)
-                .id(hydrophoneMapRefreshID)
                 .frame(minHeight: 250)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
 
@@ -249,7 +244,6 @@ struct SiteDetailView: View {
             modelContext.insert(hydrophone)
         }
 
-        hydrophoneMapRefreshID = UUID()
         dismissHydrophoneForm()
     }
 

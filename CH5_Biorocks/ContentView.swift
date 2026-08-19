@@ -92,6 +92,9 @@ struct ContentView: View {
                 SiteHomeView(sites: sites, onAddSite: presentNewSite)
             }
 
+        case .microphones:
+            microphoneView()
+
         case .simulator:
             SimulatorView()
 
