@@ -51,12 +51,7 @@ struct SiteFormOverlay: View {
                 .keyboardShortcut(.cancelAction)
             }
 
-            HStack(alignment: .bottom, spacing: 14) {
-                SiteImagePlaceholder(showsLabel: false)
-                    .frame(width: 82, height: 62)
-
-                SiteTextField(title: "Site name", placeholder: "e.g. Pemuteran Reef", text: $name)
-            }
+            SiteTextField(title: "Site name", placeholder: "e.g. Pemuteran Reef", text: $name)
 
             HStack(alignment: .top, spacing: 22) {
                 coordinateFields(

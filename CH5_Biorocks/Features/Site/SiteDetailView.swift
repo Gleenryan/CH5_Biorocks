@@ -49,8 +49,6 @@ struct SiteDetailView: View {
 
     private var siteHeader: some View {
         HStack(alignment: .top, spacing: 16) {
-            SiteImagePlaceholder()
-                .frame(width: 102, height: 88)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(site.name)
@@ -436,7 +434,12 @@ private struct HydrophoneRow: View {
         if let id = hydrophoneAudioID, !store.envelope(for: id).isEmpty {
             LiveWaveformView(samples: store.envelope(for: id), isLive: isLive)
         } else {
-            HydrophoneImagePlaceholder()
+            ZStack {
+                Color.accentColor.opacity(0.1)
+                Image(systemName: "mic.and.signal.meter")
+                    .foregroundStyle(Color.accentColor)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 

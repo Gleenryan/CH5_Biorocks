@@ -64,13 +64,8 @@ struct HydrophoneFormCard: View {
                 .foregroundStyle(.primary)
                 .padding(.bottom, 5)
 
-            // Image placeholder and name field
-            HStack(spacing: 14) {
-                HydrophoneImagePlaceholder(showsLabel: false)
-                    .frame(width: 72, height: 58)
-
-                CustomTextField(text: $name, placeholder: "Name (e.g. Dragon Structure)")
-            }
+            // Name field
+            CustomTextField(text: $name, placeholder: "Name (e.g. Dragon Structure)")
 
             // Latitude Field
             CustomTextField(text: $latitudeStr, placeholder: "Latitude (e.g. -8.128667)")
