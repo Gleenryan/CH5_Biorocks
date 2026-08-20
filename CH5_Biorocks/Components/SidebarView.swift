@@ -3,7 +3,9 @@ import SwiftUI
 enum SidebarDestination: Hashable {
     case home
     case sites
+#if DEBUG
     case simulator
+#endif
     case alerts
     case site(UUID)
 }
@@ -65,8 +67,10 @@ struct SidebarView: View {
             }
 
             Section("Tools") {
+#if DEBUG
                 Label("Simulator", systemImage: "waveform.path.ecg")
                     .tag(SidebarDestination.simulator)
+#endif
                 Label("Alerts", systemImage: "bell")
                     .tag(SidebarDestination.alerts)
             }

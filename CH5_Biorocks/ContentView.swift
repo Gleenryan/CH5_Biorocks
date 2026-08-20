@@ -29,10 +29,14 @@ struct ContentView: View {
         }
         .frame(minWidth: 840, minHeight: 620)
         .task {
+#if DEBUG
             SimulatorCatalog.bootstrap(modelContext: modelContext)
+#endif
             detectionStore.attach(modelContext: modelContext)
             hydrophoneHub.attach(store: detectionStore)
+#if DEBUG
             hydrophoneHub.start()
+#endif
         }
     }
 
@@ -92,8 +96,10 @@ struct ContentView: View {
                 SiteHomeView(sites: sites, onAddSite: presentNewSite)
             }
 
+#if DEBUG
         case .simulator:
             SimulatorView()
+#endif
 
         case .alerts:
             AlertsWorkspace()
