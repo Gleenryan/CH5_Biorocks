@@ -1,49 +1,66 @@
-//
-//  onBoardingView.swift
-//  CH5_Biorocks
-//
-//  Created by Gleenryan on 12/08/26.
-//
-
 import SwiftUI
 
 struct onBoardingView: View {
-    var onStart: () -> Void = {}
+    var onStart: () -> Void
 
     var body: some View {
         ZStack {
-            Color(nsColor: .windowBackgroundColor)
+            Image("OnBoardingBackground")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 24) {
-                Image(systemName: "water.waves")
-                    .font(.system(size: 34, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
-                    .frame(width: 72, height: 72)
-                    .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Reef Monitor")
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
-
-                    Text("Organize reef Sites, place hydrophones, and verify connected microphone inputs from one native macOS workspace.")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            
+            VStack(alignment: .leading, spacing: 15) {
+                Image("CoralystLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 94, height: 94)
+                    .clipShape(Circle())
+                    .background(Circle().fill(Color.gray.opacity(0.2)))
+                    .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                
+                Text("CORALYST")
+                    .font(.system(size: 60, weight: .heavy))
+                    .foregroundColor(.white)
+                
+                Text("\"Coral health & Blast detection \"")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundColor(.coralystPrimary)
+                
+                Rectangle()
+                    .fill(Color.white.opacity(0.6))
+                    .frame(height: 1)
+                    .frame(maxWidth: 300)
+                
+                Text("Coralyst empowers marine conservationists with real-time acoustic monitoring.\nBy analyzing underwater soundscapes, we detect illegal blast fishing and track\nthe acoustic health of coral reefs, ensuring a safer and thriving ocean ecosystem.")
+                    .font(.title3)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                
+                Button(action: {
+                    onStart()
+                }) {
+                    Text("Let's Start")
+                        .font(.title)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 53)
+                        .padding(.vertical, 14)
+                        .background(Color.coralystPrimary)
+                        .clipShape(Capsule())
                 }
-
-                Button("Get Started", action: onStart)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .keyboardShortcut(.defaultAction)
+                .buttonStyle(.plain)
+                .padding(.top, 13)
             }
-            .frame(maxWidth: 680, alignment: .leading)
-            .padding(56)
+            .padding(.leading, 150)
+//            .padding(.trailing, 40)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(minWidth: 800, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
+        .ignoresSafeArea()
     }
 }
 
 #Preview {
-    onBoardingView()
-        .frame(width: 900, height: 650)
+    onBoardingView(onStart: {})
 }
