@@ -103,50 +103,19 @@ struct SiteHomeView: View {
                 .bold()
                 .foregroundStyle(primaryText)
 
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 180, maximum: 180), spacing: 30)],
-                spacing: 16
-            ) {
-                HomeMetricCard(
-                    title: "Health Composition",
-                    value: latestSnapshot.map { String(format: "%.0f", $0.healthScore) } ?? "80",
-                    trend: "+ 2",
-                    status: latestSnapshot?.healthClass ?? "Healthy",
-                    trendIsPositive: true,
-                    primaryText: primaryText
-                )
-                HomeMetricCard(
-                    title: "NDSI",
-                    value: latestSnapshot.map { String(format: "%.2f", $0.ndsi) } ?? "0.78",
-                    trend: "+ 0.087",
-                    status: "Good",
-                    trendIsPositive: true,
-                    primaryText: primaryText
-                )
-                HomeMetricCard(
-                    title: "Snap Rate / min",
-                    value: latestSnapshot.map { String(format: "%.0f", $0.snapRatePerMin) } ?? "53",
-                    trend: "− 0.087",
-                    status: "Normal",
-                    trendIsPositive: false,
-                    primaryText: primaryText
-                )
-                HomeMetricCard(
-                    title: "Low Freq dBFS",
-                    value: latestSnapshot.map { String(format: "%.1f", $0.lowFreqSPL_dB) } ?? "−54.1",
-                    trend: "− 3.3",
-                    status: "Normal",
-                    trendIsPositive: false,
-                    primaryText: primaryText
-                )
-                HomeMetricCard(
-                    title: "Bomb Alerts",
-                    value: "\(events.count)",
-                    trend: nil,
-                    status: events.isEmpty ? "Clear" : "Check needed",
-                    trendIsPositive: events.isEmpty,
-                    primaryText: primaryText
-                )
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 24) {
+                    metricCards
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 180, maximum: 180), spacing: 24)],
+                    spacing: 16
+                ) {
+                    metricCards
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
 
             Text("*Trend is compared to the last 24 hrs")
@@ -154,6 +123,50 @@ struct SiteHomeView: View {
                 .foregroundStyle(primaryText.opacity(0.9))
                 .frame(maxWidth: .infinity, alignment: .center)
         }
+    }
+
+    @ViewBuilder
+    private var metricCards: some View {
+        HomeMetricCard(
+            title: "Health Composition",
+            value: latestSnapshot.map { String(format: "%.0f", $0.healthScore) } ?? "80",
+            trend: "+ 2",
+            status: latestSnapshot?.healthClass ?? "Healthy",
+            trendIsPositive: true,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "NDSI",
+            value: latestSnapshot.map { String(format: "%.2f", $0.ndsi) } ?? "0.78",
+            trend: "+ 0.087",
+            status: "Good",
+            trendIsPositive: true,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "Snap Rate / min",
+            value: latestSnapshot.map { String(format: "%.0f", $0.snapRatePerMin) } ?? "53",
+            trend: "− 0.087",
+            status: "Normal",
+            trendIsPositive: false,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "Low Freq dBFS",
+            value: latestSnapshot.map { String(format: "%.1f", $0.lowFreqSPL_dB) } ?? "−54.1",
+            trend: "− 3.3",
+            status: "Normal",
+            trendIsPositive: false,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "Bomb Alerts",
+            value: "\(events.count)",
+            trend: nil,
+            status: events.isEmpty ? "Clear" : "Check needed",
+            trendIsPositive: events.isEmpty,
+            primaryText: primaryText
+        )
     }
 
     private var coverageSummary: some View {
