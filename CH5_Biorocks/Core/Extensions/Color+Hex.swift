@@ -1,6 +1,8 @@
 import SwiftUI
 
 extension Color {
+    static let coralystPrimary = Color(hex: "1DB7D9")
+
     /// Initialize a Color using a Hex String (e.g., "#FF0000" or "FF0000")
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

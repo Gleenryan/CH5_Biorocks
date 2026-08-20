@@ -13,18 +13,34 @@ struct ContentView: View {
     @State private var isPresentingNewSite = false
     @State private var sitePendingDeletion: Site?
     @State private var isConfirmingSiteDeletion = false
+    @State private var isAtStartPage = true
 
     var body: some View {
         Group {
-            if hasCompletedOnboarding {
-                applicationShell
-            } else {
+            if !hasCompletedOnboarding {
                 onBoardingView {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         hasCompletedOnboarding = true
-                        selection = .home
                     }
                 }
+            } else if isAtStartPage {
+                StartPageView(
+                    sites: sites,
+                    onSelectSite: { site in
+                        selection = .site(site.id)
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            isAtStartPage = false
+                        }
+                    },
+                    onCreateSite: {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            isAtStartPage = false
+                        }
+                        presentNewSite()
+                    }
+                )
+            } else {
+                applicationShell
             }
         }
         .frame(minWidth: 840, minHeight: 620)
