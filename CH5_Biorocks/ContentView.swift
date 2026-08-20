@@ -103,13 +103,21 @@ struct ContentView: View {
     private var detailContent: some View {
         switch selection ?? .home {
         case .home:
-            SiteHomeView(sites: sites, onAddSite: presentNewSite)
+            SiteHomeView(
+                sites: sites,
+                onAddSite: presentNewSite,
+                onViewAllAlerts: { selection = .alerts }
+            )
 
         case .sites:
             if let site = sites.first {
                 sitesWorkspace(selectedSite: site)
             } else {
-                SiteHomeView(sites: sites, onAddSite: presentNewSite)
+                SiteHomeView(
+                    sites: sites,
+                    onAddSite: presentNewSite,
+                    onViewAllAlerts: { selection = .alerts }
+                )
             }
 
 #if DEBUG
@@ -124,7 +132,11 @@ struct ContentView: View {
             if let site = sites.first(where: { $0.id == siteID }) {
                 sitesWorkspace(selectedSite: site)
             } else {
-                SiteHomeView(sites: sites, onAddSite: presentNewSite)
+                SiteHomeView(
+                    sites: sites,
+                    onAddSite: presentNewSite,
+                    onViewAllAlerts: { selection = .alerts }
+                )
             }
         }
     }
@@ -189,7 +201,7 @@ private struct AlertsWorkspace: View {
             Text("Blast detections promoted after Model 1, Model 2, and debounce. Simulator events stay tagged as simulator.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            AlertsView()
+            AllAlertsView()
         }
         .padding(.horizontal, 32)
         .padding(.vertical, 28)
