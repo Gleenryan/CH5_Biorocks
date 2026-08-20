@@ -2,6 +2,8 @@ import SwiftUI
 
 extension Color {
     static let coralystPrimary = Color(hex: "1DB7D9")
+    /// Coralyst's primary text and dashboard accent colour.
+    static let coralystText = Color(hex: "073D76")
 
     /// Initialize a Color using a Hex String (e.g., "#FF0000" or "FF0000")
     init(hex: String) {
