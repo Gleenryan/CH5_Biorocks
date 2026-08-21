@@ -144,7 +144,8 @@ struct ContentView: View {
     private func sitesWorkspace(selectedSite: Site) -> some View {
         SitesWorkspaceView(
             site: selectedSite,
-            onAddSite: presentNewSite
+            onAddSite: presentNewSite,
+            onDeleteSite: deleteSiteFromSettings
         )
     }
 
@@ -190,6 +191,13 @@ struct ContentView: View {
 
         modelContext.delete(sitePendingDeletion)
         self.sitePendingDeletion = nil
+    }
+
+    private func deleteSiteFromSettings(_ site: Site) {
+        if selection == .site(site.id) || selection == .sites {
+            selection = .home
+        }
+        modelContext.delete(site)
     }
 }
 
