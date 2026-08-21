@@ -33,9 +33,10 @@ struct SiteFormOverlay: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("NEW SITE")
-                    .font(.system(size: 24, weight: .heavy))
-                    .foregroundStyle(.primary)
+                Text("New Site")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundStyle(Color.coralystText)
 
                 Spacer()
 
@@ -50,10 +51,13 @@ struct SiteFormOverlay: View {
                 .accessibilityLabel("Close")
                 .keyboardShortcut(.cancelAction)
             }
+            
+            Divider()
+                .padding(.bottom, 8)
 
             SiteTextField(title: "Site name", placeholder: "e.g. Pemuteran Reef", text: $name)
 
-            HStack(alignment: .top, spacing: 22) {
+            VStack(alignment: .leading, spacing: 16) {
                 coordinateFields(
                     title: "START",
                     latitude: $startLatitude,
@@ -105,11 +109,14 @@ struct SiteFormOverlay: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.system(size: 13, weight: .bold))
+                .font(.title2)
+                .bold()
                 .foregroundStyle(.secondary)
 
-            SiteTextField(title: "Latitude", placeholder: "-8.128667", text: latitude)
-            SiteTextField(title: "Longitude", placeholder: "114.660816", text: longitude)
+            HStack(spacing: 70) {
+                SiteTextField(title: "Latitude", placeholder: "-8.128667", text: latitude)
+                SiteTextField(title: "Longitude", placeholder: "114.660816", text: longitude)
+            }
         }
         .frame(maxWidth: .infinity)
     }
@@ -290,7 +297,7 @@ private struct SiteTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.title2)
                 .foregroundStyle(.secondary)
 
             TextField(placeholder, text: $text)
@@ -309,11 +316,11 @@ private struct SiteTextField: View {
 struct SitePrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 14, weight: .semibold))
+            .font(.title2)
             .foregroundStyle(.white)
             .padding(.horizontal, 18)
             .frame(height: 38)
-            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 8))
+            .background(Color.coralystPrimary, in: RoundedRectangle(cornerRadius: 8))
             .opacity(configuration.isPressed ? 0.75 : 1)
     }
 }
@@ -321,7 +328,7 @@ struct SitePrimaryButtonStyle: ButtonStyle {
 struct SiteSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 14, weight: .semibold))
+            .font(.title2)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 18)
             .frame(height: 38)

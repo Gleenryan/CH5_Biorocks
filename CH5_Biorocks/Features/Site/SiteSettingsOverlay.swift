@@ -70,23 +70,29 @@ struct SiteSettingsOverlay: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                Text("Site Settings")
-                    .font(.system(size: 37, weight: .bold))
-                    .foregroundStyle(primaryText)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    Text("Site Settings")
+                        .font(.largeTitle)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(primaryText)
 
-                siteFields
+                    siteFields
 
-                Divider()
+                    Divider()
 
-                hydrophoneSettings
-
-                actions
+                    hydrophoneSettings
+                }
+                .padding(28)
             }
-            .padding(28)
+            .scrollIndicators(.hidden)
+
+            actions
+                .padding(.horizontal, 28)
+                .padding(.bottom, 28)
+                .padding(.top, 10)
         }
-        .scrollIndicators(.hidden)
         .frame(width: 790)
         .frame(maxHeight: 760)
         .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 20))
@@ -124,15 +130,31 @@ struct SiteSettingsOverlay: View {
         VStack(alignment: .leading, spacing: 14) {
             SiteSettingsTextField(title: "Site Name", text: $name)
 
-            HStack(spacing: 24) {
-                SiteSettingsTextField(title: "Start Latitude", text: $startLatitude)
-                SiteSettingsTextField(title: "End Latitude", text: $endLatitude)
-            }
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Start")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(primaryText)
 
-            HStack(spacing: 24) {
-                SiteSettingsTextField(title: "Start Longitude", text: $startLongitude)
-                SiteSettingsTextField(title: "End Longitude", text: $endLongitude)
+                HStack(spacing: 70) {
+                    SiteSettingsTextField(title: "Latitude", text: $startLatitude)
+                    SiteSettingsTextField(title: "Longitude", text: $startLongitude)
+                }
             }
+            .padding(.top, 4)
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Finish")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(primaryText)
+
+                HStack(spacing: 70) {
+                    SiteSettingsTextField(title: "Latitude", text: $endLatitude)
+                    SiteSettingsTextField(title: "Longitude", text: $endLongitude)
+                }
+            }
+            .padding(.top, 4)
 
             if !isValid {
                 Text("Enter a name, latitude from −90 to 90, and longitude from −180 to 180.")
@@ -146,15 +168,19 @@ struct SiteSettingsOverlay: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Hydrophone Settings")
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.largeTitle)
+                    .fontWeight(.semibold)
                     .foregroundStyle(primaryText)
 
                 Spacer()
 
                 Button(action: onAddHydrophone) {
                     Label("New Hydrophone", systemImage: "mic.badge.plus")
+                        .font(.title2)
+                        .padding(.horizontal,10)
                 }
                 .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
                 .tint(Color.coralystPrimary)
             }
 
@@ -180,20 +206,23 @@ struct SiteSettingsOverlay: View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(hydrophone.name)
-                    .font(.title2.weight(.medium))
+                    .font(.title)
                     .foregroundStyle(primaryText)
 
                 Text(coordinateText(hydrophone.latitude, hydrophone.longitude))
-                    .font(.callout)
+                    .font(.body)
                     .foregroundStyle(primaryText.opacity(0.9))
             }
 
+            Spacer(minLength: 16)
             Spacer(minLength: 16)
 
             Button {
                 onEditHydrophone(hydrophone)
             } label: {
                 Image(systemName: "square.and.pencil")
+                    .font(.title.weight(.semibold))
+                    .frame(width: 20, height: 30, alignment: .center)
             }
             .buttonStyle(.borderedProminent)
             .tint(Color.coralystPrimary)
@@ -204,34 +233,53 @@ struct SiteSettingsOverlay: View {
                 isConfirmingHydrophoneDeletion = true
             } label: {
                 Image(systemName: "trash")
+                    .font(.title.weight(.semibold))
+                    .frame(width: 20, height: 30, alignment: .center)
             }
             .buttonStyle(.borderedProminent)
             .tint(.red)
             .accessibilityLabel("Delete \(hydrophone.name)")
         }
-        .padding(.vertical, 7)
+        .padding(.vertical, 15)
     }
 
     private var actions: some View {
         HStack(spacing: 14) {
             Spacer()
-
-            Button("Finish", action: submit)
-                .buttonStyle(.borderedProminent)
-                .tint(Color.coralystPrimary)
-                .disabled(!isValid)
-                .keyboardShortcut(.defaultAction)
-
-            Button("Cancel", action: onCancel)
-                .buttonStyle(.bordered)
-                .keyboardShortcut(.cancelAction)
-
-            Button("Delete Site", role: .destructive) {
+            
+            Button(role: .destructive) {
                 isConfirmingSiteDeletion = true
+            } label: {
+                Text("Delete Site")
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
             }
             .buttonStyle(.bordered)
             .tint(.red)
+            
+            Button(action: onCancel) {
+                Text("Cancel")
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+            }
+            .buttonStyle(.bordered)
+            .keyboardShortcut(.cancelAction)
+
+            Button(action: submit) {
+                Text("Finish")
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.coralystPrimary)
+            .disabled(!isValid)
+            .keyboardShortcut(.defaultAction)
+
+            
+
+            
         }
+        .font(.title2)
         .controlSize(.large)
         .padding(.top, 8)
     }
@@ -276,26 +324,37 @@ private struct SiteSettingsTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(title)
-                .font(.title3.weight(.medium))
+                .font(.title2)
                 .foregroundStyle(Color.coralystText)
 
             TextField(title, text: $text)
                 .textFieldStyle(.roundedBorder)
-                .font(.title3)
+                .font(.title2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 #Preview {
-    SiteSettingsOverlay(
-        site: Site(
-            name: "Pemuteran 1",
-            startLatitude: -8.128667,
-            startLongitude: 114.660816,
-            endLatitude: -8.1322,
-            endLongitude: 114.6715
-        ),
+    let previewSite = Site(
+        name: "Pemuteran 1",
+        startLatitude: -8.128667,
+        startLongitude: 114.660816,
+        endLatitude: -8.1322,
+        endLongitude: 114.6715
+    )
+    
+    let previewHydrophone = CustomLocation(
+        name: "North Reef Mic",
+        latitude: -8.129,
+        longitude: 114.662
+    )
+    
+    previewSite.hydrophones.append(previewHydrophone)
+    previewHydrophone.site = previewSite
+
+    return SiteSettingsOverlay(
+        site: previewSite,
         onCancel: {},
         onFinish: { _, _, _, _, _ in },
         onAddHydrophone: {},
@@ -303,6 +362,6 @@ private struct SiteSettingsTextField: View {
         onDeleteHydrophone: { _ in },
         onDeleteSite: { _ in }
     )
-    .frame(width: 900, height: 900)
+    .frame(width: 900, height: 1200)
     .padding()
 }
