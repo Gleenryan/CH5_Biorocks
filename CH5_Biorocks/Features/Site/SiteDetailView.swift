@@ -7,7 +7,6 @@ struct SiteDetailView: View {
 
     let site: Site
 
-    @State private var selectedTab: SiteDetailTab = .overview
     @State private var isPresentingHydrophone = false
     @State private var editingHydrophone: CustomLocation?
     @State private var hydrophoneMapRefreshID = UUID()
@@ -24,11 +23,21 @@ struct SiteDetailView: View {
 
     var body: some View {
         ZStack {
-            VStack(alignment: .leading, spacing: 18) {
-                siteHeader
-                tabPicker
-                selectedTabContent
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    siteHeader
+                        .padding(.bottom, -8)
+
+                    SiteOverviewView(
+                        site: site,
+                        hydrophones: sortedHydrophones,
+                        onViewSensors: {},
+                        onViewAlerts: {}
+                    )
+                }
+                .padding(.bottom, 40)
             }
+            .scrollIndicators(.hidden)
 
             if isPresentingHydrophone {
                 Color.black.opacity(0.36)
@@ -67,47 +76,6 @@ struct SiteDetailView: View {
             .tint(Color.coralystPrimary)
             .controlSize(.large)
             .accessibilityHint("Settings are not available yet")
-        }
-    }
-
-    private var tabPicker: some View {
-        Picker("Site Section", selection: $selectedTab) {
-            ForEach(SiteDetailTab.allCases) { tab in
-                Text(tab.title).tag(tab)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .frame(maxWidth: 620, alignment: .leading)
-        .accessibilityLabel("Site section")
-    }
-
-    @ViewBuilder
-    private var selectedTabContent: some View {
-        switch selectedTab {
-        case .overview:
-            ScrollView {
-                SiteOverviewView(
-                    site: site,
-                    hydrophones: sortedHydrophones,
-                    onViewSensors: { selectedTab = .sensors },
-                    onViewAlerts: { selectedTab = .alerts }
-                )
-            }
-            .scrollIndicators(.hidden)
-
-        case .sensors:
-            ScrollView {
-                sensorsContent
-                    .padding(4)
-            }
-            .scrollIndicators(.hidden)
-
-        case .alerts:
-            AlertsView(siteName: site.name)
-
-        case .coralHealth:
-            CoralHealthView(siteName: site.name)
         }
     }
 
@@ -222,23 +190,6 @@ struct SiteDetailView: View {
     }
 }
 
-private enum SiteDetailTab: String, CaseIterable, Identifiable {
-    case overview
-    case sensors
-    case alerts
-    case coralHealth
-
-    var id: Self { self }
-
-    var title: String {
-        switch self {
-        case .overview: "Overview"
-        case .sensors: "Sensors"
-        case .alerts: "Alerts"
-        case .coralHealth: "Coral Health"
-        }
-    }
-}
 
 private struct HydrophoneRow: View {
     let hydrophone: CustomLocation
