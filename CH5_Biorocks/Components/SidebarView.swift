@@ -23,6 +23,9 @@ struct SidebarView: View {
             Section {
                 Label("Home", systemImage: "house")
                     .tag(SidebarDestination.home)
+
+                Label("Alerts", systemImage: "bell")
+                    .tag(SidebarDestination.alerts)
             }
 
             Section {
@@ -66,14 +69,12 @@ struct SidebarView: View {
                 }
             }
 
-            Section("Tools") {
 #if DEBUG
+            Section("Tools") {
                 Label("Simulator", systemImage: "waveform.path.ecg")
                     .tag(SidebarDestination.simulator)
-#endif
-                Label("Alerts", systemImage: "bell")
-                    .tag(SidebarDestination.alerts)
             }
+#endif
         }
         .listStyle(.sidebar)
         .navigationTitle("Reef Monitor")

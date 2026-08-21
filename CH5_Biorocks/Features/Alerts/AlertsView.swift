@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct AlertsView: View {
-    var siteName: String?
+    var siteName: String? = nil
+    var onSelectAlert: (BlastDetectionEvent) -> Void = { _ in }
 
     @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse)
     private var events: [BlastDetectionEvent]
@@ -25,34 +26,41 @@ struct AlertsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(filtered) { event in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(event.siteName)
-                                    .font(.headline)
-                                Spacer()
-                                Text(event.severity.uppercased())
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(severityColor(event.severity))
-                                    .padding(.horizontal, 8)
-                                    .frame(height: 22)
-                                    .background(severityColor(event.severity).opacity(0.12), in: Capsule())
+                        Button {
+                            onSelectAlert(event)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(event.siteName)
+                                        .font(.headline)
+                                    Spacer()
+                                    Text(event.severity.uppercased())
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(severityColor(event.severity))
+                                        .padding(.horizontal, 8)
+                                        .frame(height: 22)
+                                        .background(severityColor(event.severity).opacity(0.12), in: Capsule())
+                                }
+                                Text(event.onsetTime.formatted(date: .abbreviated, time: .standard))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text("\(event.hydrophoneName) · P(blast) \(event.pBlast.formatted(.number.precision(.fractionLength(3)))) · \(event.source)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(event.narrative)
+                                    .font(.callout)
+                                if event.narrativeSource == "template" {
+                                    Text("Foundation Models unavailable — templated fallback")
+                                        .font(.caption2)
+                                        .foregroundStyle(.orange)
+                                }
                             }
-                            Text(event.onsetTime.formatted(date: .abbreviated, time: .standard))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("\(event.hydrophoneName) · P(blast) \(event.pBlast.formatted(.number.precision(.fractionLength(3)))) · \(event.source)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(event.narrative)
-                                .font(.callout)
-                            if event.narrativeSource == "template" {
-                                Text("Foundation Models unavailable — templated fallback")
-                                    .font(.caption2)
-                                    .foregroundStyle(.orange)
-                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(16)
+                            .siteGlassCard(cornerRadius: 14)
                         }
-                        .padding(16)
-                        .siteGlassCard(cornerRadius: 14)
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Open alert details")
                     }
                 }
                 .padding(4)

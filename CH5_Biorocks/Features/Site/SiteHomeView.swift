@@ -6,6 +6,7 @@ struct SiteHomeView: View {
     let sites: [Site]
     let onAddSite: () -> Void
     var onViewAllAlerts: () -> Void = {}
+    var onSelectAlert: (BlastDetectionEvent) -> Void = { _ in }
 
     @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse)
     private var events: [BlastDetectionEvent]
@@ -25,9 +26,8 @@ struct SiteHomeView: View {
         snapshots.first
     }
 
-    @MainActor private var recentAlerts: [HomeAlert] {
-        let recordedAlerts = events.prefix(3).map(HomeAlert.init(event:))
-        return recordedAlerts.isEmpty ? HomeAlert.preview : Array(recordedAlerts)
+    private var recentEvents: [BlastDetectionEvent] {
+        Array(events.prefix(3))
     }
 
     var body: some View {
@@ -77,10 +77,7 @@ struct SiteHomeView: View {
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 18) {
-                    ForEach(recentAlerts) { alert in
-                        HomeAlertCard(alert: alert, primaryText: primaryText)
-                            .frame(maxWidth: 400)
-                    }
+                    recentAlertCards
                     Spacer()
                 }
 
@@ -88,10 +85,29 @@ struct SiteHomeView: View {
                     columns: [GridItem(.adaptive(minimum: 290), spacing: 16)],
                     spacing: 16
                 ) {
-                    ForEach(recentAlerts) { alert in
-                        HomeAlertCard(alert: alert, primaryText: primaryText)
-                    }
+                    recentAlertCards
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var recentAlertCards: some View {
+        if recentEvents.isEmpty {
+            ForEach(HomeAlert.preview) { alert in
+                HomeAlertCard(alert: alert, primaryText: primaryText)
+                    .frame(maxWidth: 400)
+            }
+        } else {
+            ForEach(recentEvents) { event in
+                Button {
+                    onSelectAlert(event)
+                } label: {
+                    HomeAlertCard(alert: HomeAlert(event: event), primaryText: primaryText)
+                        .frame(maxWidth: 400)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Open alert details")
             }
         }
     }
@@ -348,4 +364,3 @@ struct SiteHomeView: View {
     .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
     .frame(width: 1000, height: 720)
 }
-

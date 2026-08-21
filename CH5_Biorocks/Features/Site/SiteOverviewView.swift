@@ -8,6 +8,7 @@ struct SiteOverviewView: View {
     let onViewSensors: () -> Void
     let onViewAlerts: () -> Void
     let onSelectHydrophone: (CustomLocation) -> Void
+    let onSelectAlert: (BlastDetectionEvent) -> Void
 
     @EnvironmentObject private var store: DetectionStore
     @Environment(\.colorScheme) private var colorScheme
@@ -34,9 +35,8 @@ struct SiteOverviewView: View {
         store.liveHydrophones.filter { $0.siteName == site.name && $0.connected }.count
     }
 
-    @MainActor private var recentAlerts: [HomeAlert] {
-        let alerts = siteEvents.prefix(4).map(HomeAlert.init(event:))
-        return alerts.isEmpty ? Array(HomeAlert.preview.prefix(4)) : Array(alerts)
+    private var recentEvents: [BlastDetectionEvent] {
+        Array(siteEvents.prefix(4))
     }
 
     var body: some View {
@@ -86,16 +86,31 @@ struct SiteOverviewView: View {
                     columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                     spacing: 12
                 ) {
-                    ForEach(recentAlerts) { alert in
-                        HomeAlertCard(alert: alert, primaryText: primaryText)
-                    }
+                    recentAlertCards
                 }
 
                 VStack(spacing: 12) {
-                    ForEach(recentAlerts) { alert in
-                        HomeAlertCard(alert: alert, primaryText: primaryText)
-                    }
+                    recentAlertCards
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var recentAlertCards: some View {
+        if recentEvents.isEmpty {
+            ForEach(HomeAlert.preview.prefix(4)) { alert in
+                HomeAlertCard(alert: alert, primaryText: primaryText)
+            }
+        } else {
+            ForEach(recentEvents) { event in
+                Button {
+                    onSelectAlert(event)
+                } label: {
+                    HomeAlertCard(alert: HomeAlert(event: event), primaryText: primaryText)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Open alert details")
             }
         }
     }
@@ -402,7 +417,8 @@ private struct MetricTrend {
         hydrophones: [],
         onViewSensors: {},
         onViewAlerts: {},
-        onSelectHydrophone: { _ in }
+        onSelectHydrophone: { _ in },
+        onSelectAlert: { _ in }
     )
     .environmentObject(DetectionStore())
     .environmentObject(HydrophoneHub())

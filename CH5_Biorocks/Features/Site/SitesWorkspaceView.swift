@@ -5,9 +5,14 @@ struct SitesWorkspaceView: View {
     let site: Site
     let onAddSite: () -> Void
     let onDeleteSite: (Site) -> Void
+    let onSelectAlert: (BlastDetectionEvent) -> Void
 
     var body: some View {
-        SiteDetailView(site: site, onDeleteSite: onDeleteSite)
+        SiteDetailView(
+            site: site,
+            onDeleteSite: onDeleteSite,
+            onSelectAlert: onSelectAlert
+        )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 28)
         .padding(.top, 24)
@@ -25,7 +30,12 @@ struct SitesWorkspaceView: View {
         endLongitude: 114.6715
     )
 
-    SitesWorkspaceView(site: site, onAddSite: {}, onDeleteSite: { _ in })
+    SitesWorkspaceView(
+        site: site,
+        onAddSite: {},
+        onDeleteSite: { _ in },
+        onSelectAlert: { _ in }
+    )
         .environmentObject(DetectionStore())
         .environmentObject(HydrophoneHub())
         .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)

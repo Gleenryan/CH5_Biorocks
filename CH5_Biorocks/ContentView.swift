@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var sitePendingDeletion: Site?
     @State private var isConfirmingSiteDeletion = false
     @State private var isAtStartPage = true
+    @State private var selectedAlert: BlastDetectionEvent?
 
     var body: some View {
         Group {
@@ -101,42 +102,53 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailContent: some View {
-        switch selection ?? .home {
-        case .home:
-            SiteHomeView(
+        if let selectedAlert {
+            AlertDetailView(
+                event: selectedAlert,
                 sites: sites,
-                onAddSite: presentNewSite,
-                onViewAllAlerts: { selection = .alerts }
+                onBack: { self.selectedAlert = nil }
             )
-
-        case .sites:
-            if let site = sites.first {
-                sitesWorkspace(selectedSite: site)
-            } else {
+        } else {
+            switch selection ?? .home {
+            case .home:
                 SiteHomeView(
                     sites: sites,
                     onAddSite: presentNewSite,
-                    onViewAllAlerts: { selection = .alerts }
+                    onViewAllAlerts: { selection = .alerts },
+                    onSelectAlert: { selectedAlert = $0 }
                 )
-            }
+
+            case .sites:
+                if let site = sites.first {
+                    sitesWorkspace(selectedSite: site)
+                } else {
+                    SiteHomeView(
+                        sites: sites,
+                        onAddSite: presentNewSite,
+                        onViewAllAlerts: { selection = .alerts },
+                        onSelectAlert: { selectedAlert = $0 }
+                    )
+                }
 
 #if DEBUG
-        case .simulator:
-            SimulatorView()
+            case .simulator:
+                SimulatorView()
 #endif
 
-        case .alerts:
-            AlertsWorkspace()
+            case .alerts:
+                AlertsWorkspace(onSelectAlert: { selectedAlert = $0 })
 
-        case .site(let siteID):
-            if let site = sites.first(where: { $0.id == siteID }) {
-                sitesWorkspace(selectedSite: site)
-            } else {
-                SiteHomeView(
-                    sites: sites,
-                    onAddSite: presentNewSite,
-                    onViewAllAlerts: { selection = .alerts }
-                )
+            case .site(let siteID):
+                if let site = sites.first(where: { $0.id == siteID }) {
+                    sitesWorkspace(selectedSite: site)
+                } else {
+                    SiteHomeView(
+                        sites: sites,
+                        onAddSite: presentNewSite,
+                        onViewAllAlerts: { selection = .alerts },
+                        onSelectAlert: { selectedAlert = $0 }
+                    )
+                }
             }
         }
     }
@@ -145,7 +157,8 @@ struct ContentView: View {
         SitesWorkspaceView(
             site: selectedSite,
             onAddSite: presentNewSite,
-            onDeleteSite: deleteSiteFromSettings
+            onDeleteSite: deleteSiteFromSettings,
+            onSelectAlert: { selectedAlert = $0 }
         )
     }
 
@@ -202,6 +215,8 @@ struct ContentView: View {
 }
 
 private struct AlertsWorkspace: View {
+    let onSelectAlert: (BlastDetectionEvent) -> Void
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Alerts")
@@ -209,7 +224,7 @@ private struct AlertsWorkspace: View {
             Text("Blast detections promoted after Model 1, Model 2, and debounce. Simulator events stay tagged as simulator.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            AllAlertsView()
+            AlertsView(onSelectAlert: onSelectAlert)
         }
         .padding(.horizontal, 32)
         .padding(.vertical, 28)
