@@ -1,15 +1,21 @@
+import Foundation
 import SwiftUI
 import SwiftData
-import Charts
-import CoreLocation
 
 struct SiteOverviewView: View {
     let site: Site
     let hydrophones: [CustomLocation]
+    let onViewSensors: () -> Void
+    let onViewAlerts: () -> Void
 
     @EnvironmentObject private var store: DetectionStore
+    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse) private var events: [BlastDetectionEvent]
     @Query(sort: \HealthSnapshotRecord.windowStart, order: .reverse) private var snapshots: [HealthSnapshotRecord]
+
+    private var primaryText: Color {
+        colorScheme == .dark ? .primary : .coralystText
+    }
 
     private var siteEvents: [BlastDetectionEvent] {
         events.filter { $0.siteName == site.name }
@@ -19,306 +25,364 @@ struct SiteOverviewView: View {
         snapshots.filter { $0.siteName == site.name }
     }
 
+    private var latestSnapshot: HealthSnapshotRecord? {
+        siteHealth.first
+    }
+
     private var liveCount: Int {
         store.liveHydrophones.filter { $0.siteName == site.name && $0.connected }.count
     }
 
+    @MainActor private var recentAlerts: [HomeAlert] {
+        let alerts = siteEvents.prefix(4).map(HomeAlert.init(event:))
+        return alerts.isEmpty ? Array(HomeAlert.preview.prefix(4)) : Array(alerts)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            mapAndSummary
-            metricsGrid
-            activityAndTrend
+        VStack(alignment: .leading, spacing: 28) {
+            alertsAndMap
+            summaryMetrics
+            informationSummary
+            hydrophoneList
         }
     }
 
-    private var mapAndSummary: some View {
+    private var alertsAndMap: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 16) {
-                mapCard.frame(minWidth: 330, maxWidth: .infinity)
-                summaryCard.frame(width: 218)
+            HStack(alignment: .top, spacing: 20) {
+                alertsPanel
+                    .frame(minWidth: 520, maxWidth: .infinity)
+                overviewMap
+                    .frame(minWidth: 520, maxWidth: .infinity)
             }
-            VStack(spacing: 16) {
-                mapCard
-                summaryCard
-            }
-        }
-    }
 
-    private var mapCard: some View {
-        SiteMapView(site: site)
-            .frame(minHeight: 300)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(8)
-            .siteGlassCard(cornerRadius: 18)
-    }
-
-    private var summaryCard: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Site Summary")
-                .font(.headline)
-
-            OverviewSummaryRow(
-                title: "Sensors live",
-                value: "\(liveCount) / \(hydrophones.count)",
-                systemImage: "sensor"
-            )
-            OverviewSummaryRow(
-                title: "Last update",
-                value: lastUpdateText,
-                systemImage: "clock"
-            )
-            OverviewSummaryRow(
-                title: "Blast alerts",
-                value: "\(siteEvents.count)",
-                systemImage: "bell"
-            )
-            OverviewSummaryRow(
-                title: "Coverage radius",
-                value: coverageRadius,
-                systemImage: "circle"
-            )
-            Spacer(minLength: 0)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 316, alignment: .topLeading)
-        .siteGlassCard(cornerRadius: 18)
-    }
-
-    private var metricsGrid: some View {
-        LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 150), spacing: 12)],
-            spacing: 12
-        ) {
-            MetricCard(
-                title: "Health composite",
-                value: siteHealth.first.map { String(format: "%.0f", $0.healthScore) } ?? "—",
-                change: siteHealth.first?.healthClass ?? "awaiting audio",
-                tint: .accentColor,
-                points: siteHealth.prefix(8).reversed().map(\.healthScore)
-            )
-            MetricCard(
-                title: "NDSI",
-                value: siteHealth.first.map { String(format: "%.2f", $0.ndsi) } ?? "—",
-                change: "bio vs anthro band",
-                tint: .blue,
-                points: siteHealth.prefix(8).reversed().map(\.ndsi)
-            )
-            MetricCard(
-                title: "Snap rate",
-                value: siteHealth.first.map { String(format: "%.0f /min", $0.snapRatePerMin) } ?? "—",
-                change: "2–8 kHz peaks",
-                tint: .green,
-                points: siteHealth.prefix(8).reversed().map(\.snapRatePerMin)
-            )
-            MetricCard(
-                title: "Low-freq level",
-                value: siteHealth.first.map { String(format: "%.1f dBFS", $0.lowFreqSPL_dB) } ?? "—",
-                change: "uncalibrated",
-                tint: .orange,
-                points: siteHealth.prefix(8).reversed().map(\.lowFreqSPL_dB)
-            )
-        }
-    }
-
-    private var activityAndTrend: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 16) {
-                recentAlertsCard.frame(minWidth: 290, maxWidth: .infinity)
-                healthTrendCard.frame(minWidth: 320, maxWidth: .infinity)
-            }
-            VStack(spacing: 16) {
-                recentAlertsCard
-                healthTrendCard
+            VStack(alignment: .leading, spacing: 20) {
+                alertsPanel
+                overviewMap
             }
         }
     }
 
-    private var recentAlertsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Recent Alerts")
-                .font(.headline)
+    private var alertsPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Recent Alerts")
+                    .font(.system(size: 31, weight: .bold))
+                    .foregroundStyle(primaryText)
 
-            if siteEvents.isEmpty {
-                Text("No promoted blast events for this Site yet.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-            } else {
-                ForEach(siteEvents.prefix(3)) { event in
-                    AlertRow(
-                        title: event.narrative.split(separator: "\n").first.map(String.init) ?? "Blast detection",
-                        detail: "\(event.hydrophoneName) · \(event.onsetTime.formatted(date: .omitted, time: .shortened))",
-                        severity: event.severity,
-                        systemImage: "waveform.path",
-                        tint: event.severity.lowercased() == "high" ? .red : .orange
-                    )
-                }
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 280, alignment: .topLeading)
-        .siteGlassCard(cornerRadius: 18)
-    }
-
-    private var healthTrendCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Health composite")
-                    .font(.headline)
                 Spacer()
-                Text("Unsupervised")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                Button(action: onViewAlerts) {
+                    Label("More Alerts", systemImage: "chevron.right")
+                }
+                .buttonStyle(.plain)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(primaryText)
             }
 
-            if siteHealth.count < 2 {
-                Text("A trend appears after two or more hydrophone snapshots.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
+            ViewThatFits(in: .horizontal) {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                    spacing: 12
+                ) {
+                    ForEach(recentAlerts) { alert in
+                        HomeAlertCard(alert: alert, primaryText: primaryText)
+                    }
+                }
+
+                VStack(spacing: 12) {
+                    ForEach(recentAlerts) { alert in
+                        HomeAlertCard(alert: alert, primaryText: primaryText)
+                    }
+                }
+            }
+        }
+    }
+
+    private var overviewMap: some View {
+        SiteMapView(site: site)
+            .frame(minHeight: 370)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(10)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(primaryText.opacity(colorScheme == .dark ? 0.35 : 0.75), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.14 : 0.10), radius: 7, y: 3)
+    }
+
+    private var summaryMetrics: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Site Summary")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 18) {
+                    metricCards
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 180, maximum: 180), spacing: 18)],
+                    spacing: 16
+                ) {
+                    metricCards
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+
+            Text("*Trend compares the two latest available readings")
+                .font(.callout.italic())
+                .foregroundStyle(primaryText.opacity(0.88))
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+    }
+
+    @ViewBuilder
+    private var metricCards: some View {
+        let healthTrend = trend(for: \.healthScore, fractionDigits: 0)
+        let ndsiTrend = trend(for: \.ndsi, fractionDigits: 2)
+        let snapRateTrend = trend(for: \.snapRatePerMin, fractionDigits: 0)
+        let lowFrequencyTrend = trend(for: \.lowFreqSPL_dB, fractionDigits: 1, lowerIsBetter: true)
+
+        HomeMetricCard(
+            title: "Health Composition",
+            value: latestSnapshot.map { String(format: "%.0f", $0.healthScore) } ?? "—",
+            trend: healthTrend.text,
+            status: latestSnapshot?.healthClass ?? "Awaiting data",
+            trendIsPositive: healthTrend.isPositive,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "NDSI",
+            value: latestSnapshot.map { String(format: "%.2f", $0.ndsi) } ?? "—",
+            trend: ndsiTrend.text,
+            status: latestSnapshot == nil ? "Awaiting data" : "Good",
+            trendIsPositive: ndsiTrend.isPositive,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "Snap Rate / min",
+            value: latestSnapshot.map { String(format: "%.0f", $0.snapRatePerMin) } ?? "—",
+            trend: snapRateTrend.text,
+            status: latestSnapshot == nil ? "Awaiting data" : "Normal",
+            trendIsPositive: snapRateTrend.isPositive,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "Low Freq dBFS",
+            value: latestSnapshot.map { String(format: "%.1f", $0.lowFreqSPL_dB) } ?? "—",
+            trend: lowFrequencyTrend.text,
+            status: latestSnapshot == nil ? "Awaiting data" : "Normal",
+            trendIsPositive: lowFrequencyTrend.isPositive,
+            primaryText: primaryText
+        )
+        HomeMetricCard(
+            title: "Bomb Alerts",
+            value: "\(siteEvents.count)",
+            trend: nil,
+            status: siteEvents.isEmpty ? "Clear" : "Check needed",
+            trendIsPositive: siteEvents.isEmpty,
+            primaryText: primaryText
+        )
+    }
+
+    private var informationSummary: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 64) {
+                HomeInfoItem(
+                    title: "Active Hydrophones",
+                    value: "\(liveCount)/\(hydrophones.count)",
+                    systemImage: "waveform",
+                    primaryText: primaryText
+                )
+                HomeInfoItem(
+                    title: "Depth Range",
+                    value: "Not recorded",
+                    systemImage: "water.waves",
+                    primaryText: primaryText
+                )
+                HomeInfoItem(
+                    title: "Coverage Area",
+                    value: coverageAreaText,
+                    systemImage: "circle.circle",
+                    primaryText: primaryText
+                )
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 210), spacing: 24)],
+                spacing: 18
+            ) {
+                HomeInfoItem(title: "Active Hydrophones", value: "\(liveCount)/\(hydrophones.count)", systemImage: "waveform", primaryText: primaryText)
+                HomeInfoItem(title: "Depth Range", value: "Not recorded", systemImage: "water.waves", primaryText: primaryText)
+                HomeInfoItem(title: "Coverage Area", value: coverageAreaText, systemImage: "circle.circle", primaryText: primaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+    }
+
+    private var hydrophoneList: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Hydrophone List")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            if hydrophones.isEmpty {
+                ContentUnavailableView {
+                    Label("No Hydrophones", systemImage: "mic.slash")
+                } description: {
+                    Text("Add a hydrophone from Sensors to begin monitoring this Site.")
+                } actions: {
+                    Button("Open Sensors", action: onViewSensors)
+                        .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, minHeight: 180)
             } else {
-                Chart(Array(siteHealth.prefix(12).reversed()), id: \.id) { snap in
-                    LineMark(
-                        x: .value("Time", snap.windowStart),
-                        y: .value("Score", snap.healthScore)
-                    )
-                    .foregroundStyle(Color.accentColor)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                ViewThatFits(in: .horizontal) {
+                    hydrophoneGrid
+                    hydrophoneCompactList
                 }
-                .chartYScale(domain: 0 ... 100)
-                .frame(minHeight: 210)
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 280, alignment: .topLeading)
-        .siteGlassCard(cornerRadius: 18)
+        .padding(.bottom, 12)
     }
 
-    private var lastUpdateText: String {
-        let eventDate = siteEvents.first?.onsetTime
-        let healthDate = siteHealth.first?.windowStart
-        guard let latest = [eventDate, healthDate].compactMap({ $0 }).max() else {
-            return liveCount > 0 ? "live" : "never"
-        }
-        return latest.formatted(.relative(presentation: .named))
-    }
-
-    private var coverageRadius: String {
-        let meters = site.coverageRadiusMeters
-        if meters >= 1_000 {
-            return "\((meters / 1_000).formatted(.number.precision(.fractionLength(1)))) km"
-        }
-        return "\(meters.formatted(.number.precision(.fractionLength(0)))) m"
-    }
-}
-
-private struct OverviewSummaryRow: View {
-    let title: String
-    let value: String
-    let systemImage: String
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 30, height: 30)
-                .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(value)
-                    .font(.callout.weight(.medium))
-                    .lineLimit(1)
-            }
-        }
-    }
-}
-
-private struct MetricCard: View {
-    let title: String
-    let value: String
-    let change: String
-    let tint: Color
-    let points: [Double]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-
-            HStack(alignment: .firstTextBaseline, spacing: 7) {
-                Text(value)
-                    .font(.system(size: 22, weight: .medium, design: .rounded))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Text(change)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(tint)
-                    .lineLimit(1)
+    private var hydrophoneGrid: some View {
+        Grid(alignment: .leading, horizontalSpacing: 26, verticalSpacing: 16) {
+            GridRow {
+                tableHeading("Hydrophone")
+                tableHeading("Last Update")
+                tableHeading("Health\nComposition")
+                tableHeading("NDSI")
+                tableHeading("Snap Rate")
+                Color.clear.frame(width: 14)
             }
 
-            if points.count > 1 {
-                Chart(Array(points.enumerated()), id: \.offset) { index, value in
-                    LineMark(
-                        x: .value("Sample", index),
-                        y: .value(title, value)
-                    )
-                    .foregroundStyle(tint)
-                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+            Divider().gridCellColumns(6)
+
+            ForEach(hydrophones) { hydrophone in
+                GridRow {
+                    Text(hydrophone.name).lineLimit(1)
+                    Text(lastUpdateText(for: hydrophone)).lineLimit(1)
+                    Text(healthValue(for: hydrophone)).lineLimit(1)
+                    Text(ndsiValue(for: hydrophone)).lineLimit(1)
+                    Text(snapRateValue(for: hydrophone)).lineLimit(1)
+                    Image(systemName: "chevron.right")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(primaryText)
                 }
-                .chartXAxis(.hidden)
-                .chartYAxis(.hidden)
-                .frame(height: 34)
+                .font(.title3)
+                .foregroundStyle(primaryText)
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onViewSensors)
+                .help("Open Sensors")
             }
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-        .background(tint.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
-        .siteGlassCard(cornerRadius: 16)
+        .frame(minWidth: 760, alignment: .leading)
+    }
+
+    private var hydrophoneCompactList: some View {
+        VStack(spacing: 10) {
+            ForEach(hydrophones) { hydrophone in
+                Button(action: onViewSensors) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "mic.fill")
+                            .foregroundStyle(primaryText)
+                            .frame(width: 30, height: 30)
+                            .background(Color.cyan.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(hydrophone.name)
+                                .font(.headline)
+                            Text("\(lastUpdateText(for: hydrophone)) · NDSI \(ndsiValue(for: hydrophone)) · Snap \(snapRateValue(for: hydrophone))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(primaryText)
+                    }
+                    .foregroundStyle(primaryText)
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var coverageAreaText: String {
+        let area = Double.pi * pow(site.coverageRadiusMeters, 2)
+        guard area > 0 else { return "—" }
+        if area >= 1_000_000 {
+            return "\((area / 1_000_000).formatted(.number.precision(.fractionLength(1)))) km²"
+        }
+        return "\(area.formatted(.number.precision(.fractionLength(0)))) m²"
+    }
+
+    private func trend(
+        for keyPath: KeyPath<HealthSnapshotRecord, Double>,
+        fractionDigits: Int,
+        lowerIsBetter: Bool = false
+    ) -> MetricTrend {
+        guard siteHealth.count >= 2 else {
+            return MetricTrend(text: nil, isPositive: true)
+        }
+
+        let change = siteHealth[0][keyPath: keyPath] - siteHealth[1][keyPath: keyPath]
+        let directionIsPositive = lowerIsBetter ? change < 0 : change >= 0
+        let format = "%.\(fractionDigits)f"
+        return MetricTrend(
+            text: String(format: format, abs(change)),
+            isPositive: directionIsPositive
+        )
+    }
+
+    private func healthSnapshot(for hydrophone: CustomLocation) -> HealthSnapshotRecord? {
+        siteHealth.first {
+            $0.hydrophoneName.localizedCaseInsensitiveCompare(hydrophone.name) == .orderedSame
+        }
+    }
+
+    private func lastUpdateText(for hydrophone: CustomLocation) -> String {
+        guard let date = healthSnapshot(for: hydrophone)?.windowStart else { return "No data" }
+        return date.formatted(.relative(presentation: .named))
+    }
+
+    private func healthValue(for hydrophone: CustomLocation) -> String {
+        guard let snapshot = healthSnapshot(for: hydrophone) else { return "—" }
+        return String(format: "%.0f", snapshot.healthScore)
+    }
+
+    private func ndsiValue(for hydrophone: CustomLocation) -> String {
+        guard let snapshot = healthSnapshot(for: hydrophone) else { return "—" }
+        return String(format: "%.2f", snapshot.ndsi)
+    }
+
+    private func snapRateValue(for hydrophone: CustomLocation) -> String {
+        guard let snapshot = healthSnapshot(for: hydrophone) else { return "—" }
+        return String(format: "%.0f", snapshot.snapRatePerMin)
+    }
+
+    private func tableHeading(_ text: String) -> some View {
+        Text(text)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(primaryText)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
-private struct AlertRow: View {
-    let title: String
-    let detail: String
-    let severity: String
-    let systemImage: String
-    let tint: Color
-
-    var body: some View {
-        HStack(spacing: 11) {
-            Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 34, height: 34)
-                .background(tint.opacity(0.1), in: RoundedRectangle(cornerRadius: 9))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.callout.weight(.medium))
-                    .lineLimit(2)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 6)
-            Text(severity)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(tint)
-                .padding(.horizontal, 9)
-                .frame(height: 24)
-                .background(tint.opacity(0.1), in: Capsule())
-        }
-        .padding(10)
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.62), in: RoundedRectangle(cornerRadius: 12))
-    }
+private struct MetricTrend {
+    let text: String?
+    let isPositive: Bool
 }
 
 #Preview {
@@ -330,11 +394,13 @@ private struct AlertRow: View {
             endLatitude: -8.1322,
             endLongitude: 114.6715
         ),
-        hydrophones: []
+        hydrophones: [],
+        onViewSensors: {},
+        onViewAlerts: {}
     )
     .environmentObject(DetectionStore())
     .environmentObject(HydrophoneHub())
     .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
-    .frame(width: 900, height: 900)
+    .frame(width: 1_200, height: 900)
     .padding()
 }

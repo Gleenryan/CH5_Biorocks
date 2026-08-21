@@ -6,36 +6,12 @@ struct SitesWorkspaceView: View {
     let onAddSite: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            header
-            SiteDetailView(site: site)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
+        SiteDetailView(site: site)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 28)
         .padding(.top, 24)
         .padding(.bottom, 20)
         .background(Color(nsColor: .windowBackgroundColor))
-    }
-
-    private var header: some View {
-        HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Sites")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-
-                Text("Monitor and manage reef Sites and their hydrophones.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Button(action: onAddSite) {
-                Label("Add Site", systemImage: "plus")
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-        }
     }
 }
 

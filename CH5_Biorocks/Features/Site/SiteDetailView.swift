@@ -3,10 +3,10 @@ import SwiftData
 
 struct SiteDetailView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
     let site: Site
 
-    @State private var selectedTab: SiteDetailTab = .overview
     @State private var isPresentingHydrophone = false
     @State private var editingHydrophone: CustomLocation?
     @State private var hydrophoneMapRefreshID = UUID()
@@ -17,14 +17,27 @@ struct SiteDetailView: View {
         }
     }
 
+    private var primaryText: Color {
+        colorScheme == .dark ? .primary : .coralystText
+    }
+
     var body: some View {
         ZStack {
-            VStack(alignment: .leading, spacing: 14) {
-                siteHeader
-                tabPicker
-                selectedTabContent
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    siteHeader
+                        .padding(.bottom, -8)
+
+                    SiteOverviewView(
+                        site: site,
+                        hydrophones: sortedHydrophones,
+                        onViewSensors: {},
+                        onViewAlerts: {}
+                    )
+                }
+                .padding(.bottom, 40)
             }
-            .padding(4)
+            .scrollIndicators(.hidden)
 
             if isPresentingHydrophone {
                 Color.black.opacity(0.36)
@@ -48,88 +61,21 @@ struct SiteDetailView: View {
     }
 
     private var siteHeader: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(site.name)
+                .font(.system(size: 48, weight: .bold))
+                .foregroundStyle(primaryText)
+                .lineLimit(2)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text(site.name)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .lineLimit(2)
+            Spacer(minLength: 16)
 
-                Text("Reef monitoring Site")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 9) {
-                        coordinateChip(
-                            title: "Start",
-                            latitude: site.startLatitude,
-                            longitude: site.startLongitude
-                        )
-                        coordinateChip(
-                            title: "Finish",
-                            latitude: site.endLatitude,
-                            longitude: site.endLongitude
-                        )
-                    }
-
-                    VStack(alignment: .leading, spacing: 7) {
-                        coordinateChip(
-                            title: "Start",
-                            latitude: site.startLatitude,
-                            longitude: site.startLongitude
-                        )
-                        coordinateChip(
-                            title: "Finish",
-                            latitude: site.endLatitude,
-                            longitude: site.endLongitude
-                        )
-                    }
-                }
+            Button(action: {}) {
+                Label("Settings", systemImage: "gearshape.fill")
             }
-
-            Spacer(minLength: 10)
-
-            LiveStatusBadge(siteName: site.name)
-        }
-        .padding(18)
-        .siteGlassCard(cornerRadius: 18)
-    }
-
-    private var tabPicker: some View {
-        Picker("Site Section", selection: $selectedTab) {
-            ForEach(SiteDetailTab.allCases) { tab in
-                Text(tab.title).tag(tab)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .frame(maxWidth: 620, alignment: .leading)
-        .accessibilityLabel("Site section")
-    }
-
-    @ViewBuilder
-    private var selectedTabContent: some View {
-        switch selectedTab {
-        case .overview:
-            ScrollView {
-                SiteOverviewView(site: site, hydrophones: sortedHydrophones)
-                    .padding(4)
-            }
-            .scrollIndicators(.hidden)
-
-        case .sensors:
-            ScrollView {
-                sensorsContent
-                    .padding(4)
-            }
-            .scrollIndicators(.hidden)
-
-        case .alerts:
-            AlertsView(siteName: site.name)
-
-        case .coralHealth:
-            CoralHealthView(siteName: site.name)
+            .buttonStyle(.borderedProminent)
+            .tint(Color.coralystPrimary)
+            .controlSize(.large)
+            .accessibilityHint("Settings are not available yet")
         }
     }
 
@@ -209,19 +155,6 @@ struct SiteDetailView: View {
         .siteGlassCard(cornerRadius: 18)
     }
 
-    private func coordinateChip(title: String, latitude: Double, longitude: Double) -> some View {
-        HStack(spacing: 6) {
-            Text(title)
-                .fontWeight(.semibold)
-            Text("\(formatted(latitude)), \(formatted(longitude))")
-                .foregroundStyle(.secondary)
-        }
-        .font(.caption)
-        .padding(.horizontal, 10)
-        .frame(height: 28)
-        .glassEffect(.regular, in: .capsule)
-    }
-
     private func saveHydrophone(
         name: String,
         latitude: Double,
@@ -255,29 +188,8 @@ struct SiteDetailView: View {
         isPresentingHydrophone = false
         editingHydrophone = nil
     }
-
-    private func formatted(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(4)))
-    }
 }
 
-private enum SiteDetailTab: String, CaseIterable, Identifiable {
-    case overview
-    case sensors
-    case alerts
-    case coralHealth
-
-    var id: Self { self }
-
-    var title: String {
-        switch self {
-        case .overview: "Overview"
-        case .sensors: "Sensors"
-        case .alerts: "Alerts"
-        case .coralHealth: "Coral Health"
-        }
-    }
-}
 
 private struct HydrophoneRow: View {
     let hydrophone: CustomLocation
