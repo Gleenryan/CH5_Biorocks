@@ -7,6 +7,15 @@ struct HomeMetricCard: View {
     let status: String
     let trendIsPositive: Bool
     let primaryText: Color
+    var isProminent: Bool = false
+
+    private var statusTint: Color {
+        switch status {
+        case "Check needed": .red
+        case "No data", "Awaiting data": .secondary
+        default: .green
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -18,7 +27,7 @@ struct HomeMetricCard: View {
 
             HStack(alignment: .center, spacing: 7) {
                 Text(value)
-                    .font(.system(size: 48, weight: .semibold))
+                    .font(.system(size: isProminent ? 68 : 48, weight: .semibold))
                     .foregroundStyle(primaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.65)
@@ -44,10 +53,15 @@ struct HomeMetricCard: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
-                .background(status == "Check needed" ? Color.red : Color.green, in: RoundedRectangle(cornerRadius: 6))
+                .background(statusTint, in: RoundedRectangle(cornerRadius: 6))
         }
         .padding(14)
-        .frame(maxWidth: 180, minHeight: 140, maxHeight: 136, alignment: .topLeading)
+        .frame(
+            maxWidth: 180,
+            minHeight: isProminent ? 224 : 140,
+            maxHeight: isProminent ? 224 : 140,
+            alignment: .topLeading
+        )
         .background(Color(hex: "C7F5FF"), in: RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.14), radius: 6, y: 3)
     }

@@ -7,6 +7,7 @@ struct SiteOverviewView: View {
     let hydrophones: [CustomLocation]
     let onViewSensors: () -> Void
     let onViewAlerts: () -> Void
+    let onSelectHydrophone: (CustomLocation) -> Void
 
     @EnvironmentObject private var store: DetectionStore
     @Environment(\.colorScheme) private var colorScheme
@@ -280,8 +281,10 @@ struct SiteOverviewView: View {
                 .font(.title3)
                 .foregroundStyle(primaryText)
                 .contentShape(Rectangle())
-                .onTapGesture(perform: onViewSensors)
-                .help("Open Sensors")
+                .onTapGesture {
+                    onSelectHydrophone(hydrophone)
+                }
+                .help("Open hydrophone details")
             }
         }
         .frame(minWidth: 760, alignment: .leading)
@@ -290,7 +293,9 @@ struct SiteOverviewView: View {
     private var hydrophoneCompactList: some View {
         VStack(spacing: 10) {
             ForEach(hydrophones) { hydrophone in
-                Button(action: onViewSensors) {
+                Button {
+                    onSelectHydrophone(hydrophone)
+                } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "mic.fill")
                             .foregroundStyle(primaryText)
@@ -396,7 +401,8 @@ private struct MetricTrend {
         ),
         hydrophones: [],
         onViewSensors: {},
-        onViewAlerts: {}
+        onViewAlerts: {},
+        onSelectHydrophone: { _ in }
     )
     .environmentObject(DetectionStore())
     .environmentObject(HydrophoneHub())
