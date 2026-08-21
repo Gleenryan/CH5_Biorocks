@@ -59,19 +59,35 @@ struct HydrophoneFormCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(isEditMode ? "EDIT HYDROPHONE" : "ADD HYDROPHONE")
-                .font(.system(size: 24, weight: .heavy))
-                .foregroundStyle(.primary)
-                .padding(.bottom, 5)
+            HStack {
+                Text(isEditMode ? "Edit Hydrophone" : "New Hydrophone")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundStyle(Color.coralystText)
 
-            // Name field
-            CustomTextField(text: $name, placeholder: "Name (e.g. Dragon Structure)")
+                Spacer()
 
-            // Latitude Field
-            CustomTextField(text: $latitudeStr, placeholder: "Latitude (e.g. -8.128667)")
+                Button(action: onCancel) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                        .background(.secondary.opacity(0.1), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
+                .keyboardShortcut(.cancelAction)
+            }
+            
+            Divider()
+                .padding(.bottom, 8)
 
-            // Longitude Field
-            CustomTextField(text: $longitudeStr, placeholder: "Longitude (e.g. 114.660816)")
+            HydrophoneTextField(title: "Hydrophone name", placeholder: "e.g. Dragon Structure", text: $name)
+
+            HStack(spacing: 36) {
+                HydrophoneTextField(title: "Latitude", placeholder: "-8.128667", text: $latitudeStr)
+                HydrophoneTextField(title: "Longitude", placeholder: "114.660816", text: $longitudeStr)
+            }
 
             microphoneInputSection
 
@@ -141,38 +157,24 @@ struct HydrophoneFormCard: View {
             )
 
             // Buttons
-            HStack(spacing: 15) {
+            HStack(spacing: 12) {
                 Spacer()
 
-                Button(action: onCancel) {
-                    Text("Cancel")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 100, height: 40)
-                        .background(.secondary.opacity(0.1))
-                        .cornerRadius(8)
-                }
-                .buttonStyle(.plain)
+                Button("Cancel", action: onCancel)
+                    .buttonStyle(SiteSecondaryButtonStyle())
 
-                Button(action: {
+                Button("Save Hydrophone") {
                     if let lat = Double(latitudeStr),
                        let lon = Double(longitudeStr),
                        let microphone = selectedMicrophone,
                        isValid {
                         onSubmit(trimmedName, lat, lon, microphone.id, microphone.name)
                     }
-                }) {
-                    Text("Submit")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 100, height: 40)
-                        .background(Color.accentColor)
-                        .cornerRadius(8)
                 }
-                .buttonStyle(.plain)
-                // Disable submit if inputs are invalid
+                .buttonStyle(SitePrimaryButtonStyle())
                 .disabled(!isValid)
                 .opacity(isValid ? 1.0 : 0.5)
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(30)
@@ -335,22 +337,27 @@ struct HydrophoneFormCard: View {
     }
 }
 
-// Reusable TextField for the form
-struct CustomTextField: View {
+private struct HydrophoneTextField: View {
+    let title: String
+    let placeholder: String
     @Binding var text: String
-    var placeholder: String
 
     var body: some View {
-        TextField(placeholder, text: $text)
-            .textFieldStyle(.plain)
-            .padding()
-            .background(Color(nsColor: .textBackgroundColor))
-            .cornerRadius(6)
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-            )
-            .font(.system(size: 16))
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.title2)
+                .foregroundStyle(.secondary)
+
+            TextField(placeholder, text: $text)
+                .textFieldStyle(.plain)
+                .padding(.horizontal, 12)
+                .frame(height: 38)
+                .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 7))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 7)
+                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+                }
+        }
     }
 }
 
