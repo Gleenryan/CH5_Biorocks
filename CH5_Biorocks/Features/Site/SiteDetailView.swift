@@ -6,8 +6,10 @@ struct SiteDetailView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let site: Site
+    let onDeleteSite: (Site) -> Void
 
     @State private var isPresentingHydrophone = false
+    @State private var isPresentingSiteSettings = false
     @State private var editingHydrophone: CustomLocation?
     @State private var selectedHydrophone: CustomLocation?
     @State private var hydrophoneMapRefreshID = UUID()
@@ -49,6 +51,32 @@ struct SiteDetailView: View {
                 .scrollIndicators(.hidden)
             }
 
+            if isPresentingSiteSettings, selectedHydrophone == nil {
+                Color.black.opacity(0.36)
+                    .ignoresSafeArea()
+                    .onTapGesture { isPresentingSiteSettings = false }
+
+                SiteSettingsOverlay(
+                    site: site,
+                    onCancel: { isPresentingSiteSettings = false },
+                    onFinish: saveSite,
+                    onAddHydrophone: {
+                        editingHydrophone = nil
+                        isPresentingHydrophone = true
+                    },
+                    onEditHydrophone: { hydrophone in
+                        editingHydrophone = hydrophone
+                        isPresentingHydrophone = true
+                    },
+                    onDeleteHydrophone: { hydrophone in
+                        modelContext.delete(hydrophone)
+                    },
+                    onDeleteSite: onDeleteSite
+                )
+                .transition(.scale(scale: 0.96).combined(with: .opacity))
+                .shadow(color: .black.opacity(0.24), radius: 26, y: 12)
+            }
+
             if isPresentingHydrophone, selectedHydrophone == nil {
                 Color.black.opacity(0.36)
                     .ignoresSafeArea()
@@ -66,8 +94,10 @@ struct SiteDetailView: View {
                 .transition(.scale(scale: 0.96).combined(with: .opacity))
                 .shadow(color: .black.opacity(0.24), radius: 26, y: 12)
             }
+
         }
         .animation(.easeOut(duration: 0.18), value: isPresentingHydrophone)
+        .animation(.easeOut(duration: 0.18), value: isPresentingSiteSettings)
     }
 
     private var siteHeader: some View {
@@ -79,13 +109,15 @@ struct SiteDetailView: View {
 
             Spacer(minLength: 16)
 
-            Button(action: {}) {
+            Button {
+                isPresentingSiteSettings = true
+            } label: {
                 Label("Settings", systemImage: "gearshape.fill")
             }
             .buttonStyle(.borderedProminent)
             .tint(Color.coralystPrimary)
             .controlSize(.large)
-            .accessibilityHint("Settings are not available yet")
+            .accessibilityHint("Open site settings")
         }
     }
 
@@ -192,6 +224,21 @@ struct SiteDetailView: View {
 
         hydrophoneMapRefreshID = UUID()
         dismissHydrophoneForm()
+    }
+
+    private func saveSite(
+        name: String,
+        startLatitude: Double,
+        startLongitude: Double,
+        endLatitude: Double,
+        endLongitude: Double
+    ) {
+        site.name = name
+        site.startLatitude = startLatitude
+        site.startLongitude = startLongitude
+        site.endLatitude = endLatitude
+        site.endLongitude = endLongitude
+        isPresentingSiteSettings = false
     }
 
     private func dismissHydrophoneForm() {
@@ -420,7 +467,8 @@ private struct LiveStatusBadge: View {
             startLongitude: 114.6608,
             endLatitude: -8.1322,
             endLongitude: 114.6715
-        )
+        ),
+        onDeleteSite: { _ in }
     )
     .environmentObject(DetectionStore())
     .environmentObject(HydrophoneHub())

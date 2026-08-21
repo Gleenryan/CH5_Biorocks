@@ -4,9 +4,10 @@ import SwiftData
 struct SitesWorkspaceView: View {
     let site: Site
     let onAddSite: () -> Void
+    let onDeleteSite: (Site) -> Void
 
     var body: some View {
-        SiteDetailView(site: site)
+        SiteDetailView(site: site, onDeleteSite: onDeleteSite)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 28)
         .padding(.top, 24)
@@ -24,7 +25,7 @@ struct SitesWorkspaceView: View {
         endLongitude: 114.6715
     )
 
-    SitesWorkspaceView(site: site, onAddSite: {})
+    SitesWorkspaceView(site: site, onAddSite: {}, onDeleteSite: { _ in })
         .environmentObject(DetectionStore())
         .environmentObject(HydrophoneHub())
         .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
