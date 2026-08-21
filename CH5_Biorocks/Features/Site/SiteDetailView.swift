@@ -9,6 +9,7 @@ struct SiteDetailView: View {
 
     @State private var isPresentingHydrophone = false
     @State private var editingHydrophone: CustomLocation?
+    @State private var selectedHydrophone: CustomLocation?
     @State private var hydrophoneMapRefreshID = UUID()
 
     private var sortedHydrophones: [CustomLocation] {
@@ -23,23 +24,32 @@ struct SiteDetailView: View {
 
     var body: some View {
         ZStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    siteHeader
-                        .padding(.bottom, -8)
+            if let selectedHydrophone {
+                HydrophoneDetailView(
+                    site: site,
+                    hydrophone: selectedHydrophone,
+                    onBack: { self.selectedHydrophone = nil }
+                )
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        siteHeader
+                            .padding(.bottom, -8)
 
-                    SiteOverviewView(
-                        site: site,
-                        hydrophones: sortedHydrophones,
-                        onViewSensors: {},
-                        onViewAlerts: {}
-                    )
+                        SiteOverviewView(
+                            site: site,
+                            hydrophones: sortedHydrophones,
+                            onViewSensors: {},
+                            onViewAlerts: {},
+                            onSelectHydrophone: { selectedHydrophone = $0 }
+                        )
+                    }
+                    .padding(.bottom, 40)
                 }
-                .padding(.bottom, 40)
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
 
-            if isPresentingHydrophone {
+            if isPresentingHydrophone, selectedHydrophone == nil {
                 Color.black.opacity(0.36)
                     .ignoresSafeArea()
                     .onTapGesture(perform: dismissHydrophoneForm)
