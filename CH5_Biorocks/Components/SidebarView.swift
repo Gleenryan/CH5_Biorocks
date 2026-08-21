@@ -7,6 +7,7 @@ enum SidebarDestination: Hashable {
     case simulator
 #endif
     case alerts
+    case alert(UUID)
     case site(UUID)
 }
 

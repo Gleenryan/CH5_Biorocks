@@ -7,6 +7,8 @@ struct ContentView: View {
     @EnvironmentObject private var hydrophoneHub: HydrophoneHub
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Query(sort: \Site.createdAt, order: .reverse) private var sites: [Site]
+    @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse)
+    private var alertEvents: [BlastDetectionEvent]
 
     @State private var selection: SidebarDestination? = .home
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -14,7 +16,7 @@ struct ContentView: View {
     @State private var sitePendingDeletion: Site?
     @State private var isConfirmingSiteDeletion = false
     @State private var isAtStartPage = true
-    @State private var selectedAlert: BlastDetectionEvent?
+    @State private var selectionBeforeAlert: SidebarDestination?
 
     var body: some View {
         Group {
@@ -45,6 +47,12 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 840, minHeight: 620)
+        .onChange(of: selection) { _, newSelection in
+            if let newSelection, case .alert = newSelection {
+                return
+            }
+            selectionBeforeAlert = nil
+        }
         .task {
 #if DEBUG
             SimulatorCatalog.bootstrap(modelContext: modelContext)
@@ -102,53 +110,61 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailContent: some View {
-        if let selectedAlert {
-            AlertDetailView(
-                event: selectedAlert,
+        switch selection ?? .home {
+        case .home:
+            SiteHomeView(
                 sites: sites,
-                onBack: { self.selectedAlert = nil }
+                onAddSite: presentNewSite,
+                onViewAllAlerts: { selection = .alerts },
+                onSelectAlert: { showAlert($0) }
             )
-        } else {
-            switch selection ?? .home {
-            case .home:
+
+        case .sites:
+            if let site = sites.first {
+                sitesWorkspace(selectedSite: site)
+            } else {
                 SiteHomeView(
                     sites: sites,
                     onAddSite: presentNewSite,
                     onViewAllAlerts: { selection = .alerts },
-                    onSelectAlert: { selectedAlert = $0 }
+                    onSelectAlert: { showAlert($0) }
                 )
-
-            case .sites:
-                if let site = sites.first {
-                    sitesWorkspace(selectedSite: site)
-                } else {
-                    SiteHomeView(
-                        sites: sites,
-                        onAddSite: presentNewSite,
-                        onViewAllAlerts: { selection = .alerts },
-                        onSelectAlert: { selectedAlert = $0 }
-                    )
-                }
+            }
 
 #if DEBUG
-            case .simulator:
-                SimulatorView()
+        case .simulator:
+            SimulatorView()
 #endif
 
-            case .alerts:
-                AlertsWorkspace(onSelectAlert: { selectedAlert = $0 })
+        case .alerts:
+            AlertsWorkspace(onSelectAlert: { showAlert($0) })
 
-            case .site(let siteID):
-                if let site = sites.first(where: { $0.id == siteID }) {
-                    sitesWorkspace(selectedSite: site)
-                } else {
-                    SiteHomeView(
-                        sites: sites,
-                        onAddSite: presentNewSite,
-                        onViewAllAlerts: { selection = .alerts },
-                        onSelectAlert: { selectedAlert = $0 }
-                    )
-                }
+        case .alert(let alertID):
+            if let alert = alertEvents.first(where: { $0.id == alertID }) {
+                AlertDetailView(
+                    event: alert,
+                    sites: sites,
+                    onBack: dismissAlertDetail
+                )
+            } else {
+                SiteHomeView(
+                    sites: sites,
+                    onAddSite: presentNewSite,
+                    onViewAllAlerts: { selection = .alerts },
+                    onSelectAlert: { showAlert($0) }
+                )
+            }
+
+        case .site(let siteID):
+            if let site = sites.first(where: { $0.id == siteID }) {
+                sitesWorkspace(selectedSite: site)
+            } else {
+                SiteHomeView(
+                    sites: sites,
+                    onAddSite: presentNewSite,
+                    onViewAllAlerts: { selection = .alerts },
+                    onSelectAlert: { showAlert($0) }
+                )
             }
         }
     }
@@ -158,7 +174,7 @@ struct ContentView: View {
             site: selectedSite,
             onAddSite: presentNewSite,
             onDeleteSite: deleteSiteFromSettings,
-            onSelectAlert: { selectedAlert = $0 }
+            onSelectAlert: { showAlert($0) }
         )
     }
 
@@ -211,6 +227,21 @@ struct ContentView: View {
             selection = .home
         }
         modelContext.delete(site)
+    }
+
+    private func showAlert(_ alert: BlastDetectionEvent) {
+        if let selection, case .alert = selection {
+            // Preserve the original screen so Back still returns to it.
+        } else {
+            selectionBeforeAlert = selection
+        }
+        selection = .alert(alert.id)
+    }
+
+    private func dismissAlertDetail() {
+        let destination = selectionBeforeAlert ?? .home
+        selectionBeforeAlert = nil
+        selection = destination
     }
 }
 
