@@ -3,6 +3,7 @@ import SwiftData
 
 struct SiteDetailView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
     let site: Site
 
@@ -17,14 +18,17 @@ struct SiteDetailView: View {
         }
     }
 
+    private var primaryText: Color {
+        colorScheme == .dark ? .primary : .coralystText
+    }
+
     var body: some View {
         ZStack {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 18) {
                 siteHeader
                 tabPicker
                 selectedTabContent
             }
-            .padding(4)
 
             if isPresentingHydrophone {
                 Color.black.opacity(0.36)
@@ -48,52 +52,22 @@ struct SiteDetailView: View {
     }
 
     private var siteHeader: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(site.name)
+                .font(.system(size: 48, weight: .bold))
+                .foregroundStyle(primaryText)
+                .lineLimit(2)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text(site.name)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .lineLimit(2)
+            Spacer(minLength: 16)
 
-                Text("Reef monitoring Site")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 9) {
-                        coordinateChip(
-                            title: "Start",
-                            latitude: site.startLatitude,
-                            longitude: site.startLongitude
-                        )
-                        coordinateChip(
-                            title: "Finish",
-                            latitude: site.endLatitude,
-                            longitude: site.endLongitude
-                        )
-                    }
-
-                    VStack(alignment: .leading, spacing: 7) {
-                        coordinateChip(
-                            title: "Start",
-                            latitude: site.startLatitude,
-                            longitude: site.startLongitude
-                        )
-                        coordinateChip(
-                            title: "Finish",
-                            latitude: site.endLatitude,
-                            longitude: site.endLongitude
-                        )
-                    }
-                }
+            Button(action: {}) {
+                Label("Settings", systemImage: "gearshape.fill")
             }
-
-            Spacer(minLength: 10)
-
-            LiveStatusBadge(siteName: site.name)
+            .buttonStyle(.borderedProminent)
+            .tint(Color.coralystPrimary)
+            .controlSize(.large)
+            .accessibilityHint("Settings are not available yet")
         }
-        .padding(18)
-        .siteGlassCard(cornerRadius: 18)
     }
 
     private var tabPicker: some View {
@@ -113,8 +87,12 @@ struct SiteDetailView: View {
         switch selectedTab {
         case .overview:
             ScrollView {
-                SiteOverviewView(site: site, hydrophones: sortedHydrophones)
-                    .padding(4)
+                SiteOverviewView(
+                    site: site,
+                    hydrophones: sortedHydrophones,
+                    onViewSensors: { selectedTab = .sensors },
+                    onViewAlerts: { selectedTab = .alerts }
+                )
             }
             .scrollIndicators(.hidden)
 
@@ -209,19 +187,6 @@ struct SiteDetailView: View {
         .siteGlassCard(cornerRadius: 18)
     }
 
-    private func coordinateChip(title: String, latitude: Double, longitude: Double) -> some View {
-        HStack(spacing: 6) {
-            Text(title)
-                .fontWeight(.semibold)
-            Text("\(formatted(latitude)), \(formatted(longitude))")
-                .foregroundStyle(.secondary)
-        }
-        .font(.caption)
-        .padding(.horizontal, 10)
-        .frame(height: 28)
-        .glassEffect(.regular, in: .capsule)
-    }
-
     private func saveHydrophone(
         name: String,
         latitude: Double,
@@ -254,10 +219,6 @@ struct SiteDetailView: View {
     private func dismissHydrophoneForm() {
         isPresentingHydrophone = false
         editingHydrophone = nil
-    }
-
-    private func formatted(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(4)))
     }
 }
 
