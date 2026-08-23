@@ -155,8 +155,8 @@ struct AlertsView: View {
                 Button {
                     onSelectAlert(event)
                 } label: {
-                    HomeAlertCard(
-                        alert: HomeAlert(event: event),
+                    AlertCard(
+                        alert: AlertSummary(event: event),
                         primaryText: primaryText
                     )
                     .frame(maxWidth: 300, alignment: .leading)
