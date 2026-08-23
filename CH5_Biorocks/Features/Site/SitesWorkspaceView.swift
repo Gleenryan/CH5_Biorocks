@@ -5,12 +5,14 @@ struct SitesWorkspaceView: View {
     let site: Site
     let onAddSite: () -> Void
     let onDeleteSite: (Site) -> Void
+    let onViewSiteAlerts: () -> Void
     let onSelectAlert: (BlastDetectionEvent) -> Void
 
     var body: some View {
         SiteDetailView(
             site: site,
             onDeleteSite: onDeleteSite,
+            onViewSiteAlerts: onViewSiteAlerts,
             onSelectAlert: onSelectAlert
         )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -34,6 +36,7 @@ struct SitesWorkspaceView: View {
         site: site,
         onAddSite: {},
         onDeleteSite: { _ in },
+        onViewSiteAlerts: {},
         onSelectAlert: { _ in }
     )
         .environmentObject(DetectionStore())

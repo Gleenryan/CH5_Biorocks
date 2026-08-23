@@ -7,6 +7,7 @@ struct SiteDetailView: View {
 
     let site: Site
     let onDeleteSite: (Site) -> Void
+    let onViewSiteAlerts: () -> Void
     let onSelectAlert: (BlastDetectionEvent) -> Void
 
     @State private var isPresentingHydrophone = false
@@ -43,7 +44,7 @@ struct SiteDetailView: View {
                             site: site,
                             hydrophones: sortedHydrophones,
                             onViewSensors: {},
-                            onViewAlerts: {},
+                            onViewAlerts: onViewSiteAlerts,
                             onSelectHydrophone: { selectedHydrophone = $0 },
                             onSelectAlert: onSelectAlert
                         )
@@ -471,6 +472,7 @@ private struct LiveStatusBadge: View {
             endLongitude: 114.6715
         ),
         onDeleteSite: { _ in },
+        onViewSiteAlerts: {},
         onSelectAlert: { _ in }
     )
     .environmentObject(DetectionStore())
