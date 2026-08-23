@@ -14,12 +14,6 @@ struct SiteMapView: View {
             .foregroundStyle(Color(hex: "17C3B2").opacity(0.16))
             .stroke(Color(hex: "17C3B2"), lineWidth: 3)
 
-            Marker("Start", systemImage: "circle.fill", coordinate: site.startCoordinate)
-                .tint(Color(hex: "29CBB5"))
-
-            Marker("Finish", systemImage: "circle.fill", coordinate: site.endCoordinate)
-                .tint(Color(hex: "29CBB5"))
-
             ForEach(site.hydrophones) { hydrophone in
                 Marker(hydrophone.name, systemImage: "mic.fill", coordinate: hydrophone.coordinate)
                     .tint(.orange)
