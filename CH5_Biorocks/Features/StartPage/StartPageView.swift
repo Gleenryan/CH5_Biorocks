@@ -5,16 +5,21 @@ struct StartPageView: View {
     var onSelectSite: (Site) -> Void
     var onCreateSite: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var primaryText: Color {
+        colorScheme == .dark ? .primary : .coralystText
+    }
+
     var body: some View {
         VStack(spacing: 40) {
+            
             // App Icon
-            // Using the CoralystLogo if available, otherwise a fallback circle
             Image("CoralystLogo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 94, height: 94)
                 .clipShape(Circle())
-               
                 .background(Circle().fill(Color.gray.opacity(0.2)))
                 .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
 
@@ -25,7 +30,7 @@ struct StartPageView: View {
                     Text("Recent Sites")
                         .font(.title)
                         .bold()
-                        .foregroundColor(.primary)
+                        .foregroundStyle(primaryText)
 
                     if sites.isEmpty {
                         Spacer()
@@ -63,7 +68,7 @@ struct StartPageView: View {
                     Text("Create New Site")
                         .font(.title)
                         .bold()
-                        .foregroundColor(.primary)
+                        .foregroundStyle(primaryText)
 
                     Button(action: {
                         onCreateSite()
@@ -91,9 +96,18 @@ struct StartPageView: View {
                 .frame(width: 280, alignment: .top)
             }
             .frame(height: 280)
-            .background(Color.white)
+            .background(Color(nsColor: .controlBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 24))
-            .shadow(color: Color.black.opacity(0.08), radius: 25, x: 0, y: 15)
+            .overlay {
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+            }
+            .shadow(
+                color: .black.opacity(colorScheme == .dark ? 0.20 : 0.08),
+                radius: 25,
+                x: 0,
+                y: 15
+            )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
@@ -109,5 +123,18 @@ struct StartPageView: View {
         onSelectSite: { _ in },
         onCreateSite: {}
     )
+    .frame(width: 800, height: 600)
+}
+
+#Preview("Dark Mode") {
+    StartPageView(
+        sites: [
+            Site(name: "Pemuteran Reef", startLatitude: 0, startLongitude: 0, endLatitude: 0, endLongitude: 0),
+            Site(name: "Dragon Structure", startLatitude: 0, startLongitude: 0, endLatitude: 0, endLongitude: 0)
+        ],
+        onSelectSite: { _ in },
+        onCreateSite: {}
+    )
+    .preferredColorScheme(.dark)
     .frame(width: 800, height: 600)
 }
