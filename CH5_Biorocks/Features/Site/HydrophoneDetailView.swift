@@ -335,20 +335,84 @@ private struct HydrophoneTrendChart: View {
     }
 }
 
-#Preview {
-    HydrophoneDetailView(
-        site: Site(
-            name: "Pemuteran",
+private struct HydrophoneDetailPreviewSample {
+    let container: ModelContainer
+    let site: Site
+    let hydrophone: CustomLocation
+
+    // Preview-only sample data so every chart renders in the Xcode canvas.
+    static func make() -> Self {
+        let container = try! ModelContainer(
+            for: Site.self,
+            CustomLocation.self,
+            HealthSnapshotRecord.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let site = Site(
+            name: "Pemuteran Reef",
             startLatitude: -8.1287,
             startLongitude: 114.6608,
             endLatitude: -8.1322,
             endLongitude: 114.6715
-        ),
-        hydrophone: CustomLocation(name: "Hydrophone 1", latitude: -8.1304, longitude: 114.6642),
+        )
+        let hydrophone = CustomLocation(
+            name: "Dragon Structure",
+            latitude: -8.1304,
+            longitude: 114.6642,
+            microphoneDeviceID: "preview-dragon-structure",
+            microphoneDeviceName: "Preview microphone",
+            site: site
+        )
+
+        context.insert(site)
+        context.insert(hydrophone)
+
+        let healthScores = [76.0, 77.0, 75.0, 78.0, 77.0, 81.0, 80.0, 80.0]
+        let ndsiValues = [0.42, 0.49, 0.37, 0.57, 0.50, 0.61, 0.64, 0.68]
+        let snapRates = [52.0, 56.0, 49.0, 61.0, 57.0, 63.0, 54.0, 58.0]
+
+        for index in healthScores.indices {
+            let offset = Double(index)
+            let record = HealthSnapshotRecord(
+                siteName: site.name,
+                hydrophoneName: hydrophone.name,
+                windowStart: .now.addingTimeInterval(-Double(healthScores.count - 1 - index) * 3_600),
+                healthScore: healthScores[index],
+                healthClass: "Healthy",
+                aci: 0.55 + offset * 0.015,
+                adi: 0.48 + offset * 0.025,
+                aei: 0.58 - offset * 0.008,
+                ndsi: ndsiValues[index],
+                lowFreqSPL_dB: -57 + offset * 0.7,
+                snapRatePerMin: snapRates[index],
+                biophonyRatio: 0.46 + offset * 0.018,
+                anthrophonyRatio: 0.32 - offset * 0.01,
+                blastEventCountLastHour: 0,
+                topDrivers: "ndsi,snapRatePerMin",
+                narrative: "Preview reading",
+                narrativeSource: "preview",
+                note: "Preview-only health snapshot."
+            )
+            context.insert(record)
+        }
+
+        try? context.save()
+        return Self(container: container, site: site, hydrophone: hydrophone)
+    }
+}
+
+private let hydrophoneDetailPreviewSample = HydrophoneDetailPreviewSample.make()
+
+#Preview("With chart data") {
+    HydrophoneDetailView(
+        site: hydrophoneDetailPreviewSample.site,
+        hydrophone: hydrophoneDetailPreviewSample.hydrophone,
         onBack: {}
     )
     .environmentObject(DetectionStore())
-    .modelContainer(for: [Site.self, CustomLocation.self, BlastDetectionEvent.self, HealthSnapshotRecord.self], inMemory: true)
-    .frame(width: 1_200, height: 900)
+    .modelContainer(hydrophoneDetailPreviewSample.container)
+    .frame(width: 1_200, height: 1_600)
     .padding()
 }
