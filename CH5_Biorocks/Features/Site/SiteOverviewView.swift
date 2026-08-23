@@ -101,6 +101,7 @@ struct SiteOverviewView: View {
         if recentEvents.isEmpty {
             ForEach(HomeAlert.preview.prefix(4)) { alert in
                 HomeAlertCard(alert: alert, primaryText: primaryText)
+                    .frame(maxWidth: 300, alignment: .leading)
             }
         } else {
             ForEach(recentEvents) { event in
@@ -108,6 +109,7 @@ struct SiteOverviewView: View {
                     onSelectAlert(event)
                 } label: {
                     HomeAlertCard(alert: HomeAlert(event: event), primaryText: primaryText)
+                        .frame(maxWidth: 300, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Open alert details")

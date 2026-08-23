@@ -137,7 +137,25 @@ struct ContentView: View {
 #endif
 
         case .alerts:
-            AlertsWorkspace(onSelectAlert: { showAlert($0) })
+            AlertsWorkspace(
+                scope: .all,
+                onSelectAlert: { showAlert($0) }
+            )
+
+        case .siteAlerts(let siteID):
+            if let site = sites.first(where: { $0.id == siteID }) {
+                AlertsWorkspace(
+                    scope: .site(name: site.name),
+                    onSelectAlert: { showAlert($0) }
+                )
+            } else {
+                SiteHomeView(
+                    sites: sites,
+                    onAddSite: presentNewSite,
+                    onViewAllAlerts: { selection = .alerts },
+                    onSelectAlert: { showAlert($0) }
+                )
+            }
 
         case .alert(let alertID):
             if let alert = alertEvents.first(where: { $0.id == alertID }) {
@@ -174,6 +192,7 @@ struct ContentView: View {
             site: selectedSite,
             onAddSite: presentNewSite,
             onDeleteSite: deleteSiteFromSettings,
+            onViewSiteAlerts: { selection = .siteAlerts(selectedSite.id) },
             onSelectAlert: { showAlert($0) }
         )
     }
@@ -223,7 +242,9 @@ struct ContentView: View {
     }
 
     private func deleteSiteFromSettings(_ site: Site) {
-        if selection == .site(site.id) || selection == .sites {
+        if selection == .site(site.id)
+            || selection == .siteAlerts(site.id)
+            || selection == .sites {
             selection = .home
         }
         modelContext.delete(site)
@@ -246,21 +267,11 @@ struct ContentView: View {
 }
 
 private struct AlertsWorkspace: View {
+    let scope: AlertListScope
     let onSelectAlert: (BlastDetectionEvent) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Alerts")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-            Text("Blast detections promoted after Model 1, Model 2, and debounce. Simulator events stay tagged as simulator.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            AlertsView(onSelectAlert: onSelectAlert)
-        }
-        .padding(.horizontal, 32)
-        .padding(.vertical, 28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(nsColor: .windowBackgroundColor))
+        AlertsView(scope: scope, onSelectAlert: onSelectAlert)
     }
 }
 
