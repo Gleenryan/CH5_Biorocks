@@ -28,13 +28,38 @@ final class HydrophoneHub: ObservableObject {
 
     func toggleListen(hydrophoneID: String) {
         store?.toggleListen(id: hydrophoneID)
-        audioMonitor.setListenedID(store?.listeningHydrophoneID)
+        let id = store?.listeningHydrophoneID
+        audioMonitor.setListenedID(id)
+        if id == nil {
+            audioMonitor.stopPlayback()
+        }
+    }
+
+    /// Mute speakers without ending the simulator stream.
+    func stopListening() {
+        store?.mixingAllLiveAudio = false
+        store?.listeningHydrophoneID = nil
+        audioMonitor.stopPlayback()
     }
 
     func replay(hydrophoneID: String) {
+        store?.mixingAllLiveAudio = false
         store?.listeningHydrophoneID = hydrophoneID
         audioMonitor.setListenedID(hydrophoneID)
         audioMonitor.replay(hydrophoneID: hydrophoneID)
+    }
+
+    /// Stop speaker playback, drop live hydro sockets, and mark hydros idle.
+    func haltSimulatorStreams() {
+        stopListening()
+        engine.finishAll()
+        server.dropAllSessions()
+    }
+
+    func prepareForSimulatorStart() {
+        store?.listeningHydrophoneID = nil
+        store?.mixingAllLiveAudio = true
+        audioMonitor.startMixingAll()
     }
 
     func start() {
@@ -84,15 +109,13 @@ final class HydrophoneHub: ObservableObject {
             store?.appendLog(line)
         case .status(let status):
             store?.upsertHydrophone(status)
-            if status.connected, store?.listeningHydrophoneID == nil {
-                store?.listeningHydrophoneID = status.id
-                audioMonitor.setListenedID(status.id)
-            }
         case .disconnected(let id):
             store?.markDisconnected(id: id)
             if store?.listeningHydrophoneID == id {
                 store?.listeningHydrophoneID = nil
-                audioMonitor.setListenedID(nil)
+                if store?.mixingAllLiveAudio != true {
+                    audioMonitor.stopPlayback()
+                }
             }
         case .detection(let detection):
             store?.persist(detection)
@@ -171,7 +194,6 @@ nonisolated final class PipelineEngine: @unchecked Sendable {
             pipeline.onScorecard = { [weak self] card in self?.emit(.scorecard(card)) }
             self.pipelines[sessionID] = pipeline
             self.hydrophoneIDs[sessionID] = hello.hydrophoneId
-            self.audioMonitor?.setListenedID(hello.hydrophoneId)
             self.emit(.log(PipelineLogLine(
                 hydrophoneName: hello.hydrophoneName,
                 stage: "Connect",
@@ -204,14 +226,26 @@ nonisolated final class PipelineEngine: @unchecked Sendable {
 
     func finish(sessionID: UUID) {
         queue.async { [weak self] in
+            self?.finishLocked(sessionID)
+        }
+    }
+
+    func finishAll() {
+        queue.async { [weak self] in
             guard let self else { return }
-            let hydroID = self.hydrophoneIDs[sessionID]
-            self.pipelines[sessionID]?.finish()
-            self.pipelines.removeValue(forKey: sessionID)
-            self.hydrophoneIDs.removeValue(forKey: sessionID)
-            if let hydroID {
-                self.emit(.disconnected(hydroID))
+            for sessionID in Array(self.pipelines.keys) {
+                self.finishLocked(sessionID)
             }
+        }
+    }
+
+    private func finishLocked(_ sessionID: UUID) {
+        let hydroID = hydrophoneIDs[sessionID]
+        pipelines[sessionID]?.finish()
+        pipelines.removeValue(forKey: sessionID)
+        hydrophoneIDs.removeValue(forKey: sessionID)
+        if let hydroID {
+            emit(.disconnected(hydroID))
         }
     }
 

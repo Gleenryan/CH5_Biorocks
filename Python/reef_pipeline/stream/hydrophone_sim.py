@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -39,6 +41,11 @@ def stream_cli(argv: Optional[List[str]] = None) -> int:
         choices=[1, 2],
         help="Blasts injected on the blast hydrophone only (fleet mode)",
     )
+    parser.add_argument(
+        "--synthetic",
+        action="store_true",
+        help="Use generated reef/blast audio instead of REEFGUARD_RAW_DATA WAVs",
+    )
     parser.add_argument("--wav", type=Path, help="Stream a single WAV file")
     parser.add_argument("--site-name", default="Indonesia N1")
     parser.add_argument("--hydrophone-name", default="Hydrophone 1")
@@ -57,19 +64,29 @@ def stream_cli(argv: Optional[List[str]] = None) -> int:
 
     realtime = args.realtime or not args.fast
     jobs = _jobs_from_args(args)
+    print(f"Streaming {len(jobs)} hydrophone(s) to {args.host}:{args.port}", flush=True)
+    stop = threading.Event()
+
+    def _request_stop(*_args) -> None:
+        stop.set()
+
+    signal.signal(signal.SIGTERM, _request_stop)
+    signal.signal(signal.SIGINT, _request_stop)
+
     try:
         if len(jobs) == 1:
-            print(_stream_job(jobs[0], args.host, args.port, realtime, args.loop))
+            print(_stream_job(jobs[0], args.host, args.port, realtime, args.loop, stop))
             return 0
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             futures = [
-                pool.submit(_stream_job, job, args.host, args.port, realtime, args.loop)
+                pool.submit(_stream_job, job, args.host, args.port, realtime, args.loop, stop)
                 for job in jobs
             ]
             for future in as_completed(futures):
                 print(future.result())
         return 0
     except KeyboardInterrupt:
+        stop.set()
         print("stopped")
         return 130
 
@@ -93,7 +110,11 @@ def _jobs_from_args(args: argparse.Namespace) -> List[Dict[str, Any]]:
             }
         ]
     if args.fleet:
-        return build_fleet_jobs(seed=args.seed, n_blasts=args.n_blasts)
+        return build_fleet_jobs(
+            seed=args.seed,
+            n_blasts=args.n_blasts,
+            synthetic=args.synthetic,
+        )
     return [
         {
             "site_name": args.site_name,
@@ -107,7 +128,14 @@ def _jobs_from_args(args: argparse.Namespace) -> List[Dict[str, Any]]:
     ]
 
 
-def _stream_job(job: Dict[str, Any], host: str, port: int, realtime: bool, loop: bool) -> str:
+def _stream_job(
+    job: Dict[str, Any],
+    host: str,
+    port: int,
+    realtime: bool,
+    loop: bool,
+    stop: Optional[threading.Event] = None,
+) -> str:
     audio, hello, hydro_id = _prepare(job)
     try:
         result = stream_to_app(
@@ -117,6 +145,7 @@ def _stream_job(job: Dict[str, Any], host: str, port: int, realtime: bool, loop:
             port=port,
             realtime=realtime,
             loop=loop,
+            should_stop=(stop.is_set if stop is not None else None),
         )
     except OSError as exc:
         raise SystemExit(

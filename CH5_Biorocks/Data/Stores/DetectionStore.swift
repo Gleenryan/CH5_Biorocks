@@ -14,6 +14,7 @@ final class DetectionStore: ObservableObject {
     @Published var lastHealth: HealthScoreResult?
     @Published var envelopes: [String: [Double]] = [:]
     @Published var listeningHydrophoneID: String?
+    @Published var mixingAllLiveAudio = false
     @Published var hasClip: [String: Bool] = [:]
 
     weak var modelContext: ModelContext?
@@ -62,7 +63,17 @@ final class DetectionStore: ObservableObject {
     }
 
     func toggleListen(id: String) {
+        mixingAllLiveAudio = false
         listeningHydrophoneID = listeningHydrophoneID == id ? nil : id
+    }
+
+    var isSpeakerPlaybackActive: Bool {
+        mixingAllLiveAudio || listeningHydrophoneID != nil
+    }
+
+    func isPlaying(hydrophoneID: String, connected: Bool) -> Bool {
+        if mixingAllLiveAudio { return connected }
+        return listeningHydrophoneID == hydrophoneID
     }
 
     /// Creates (or updates) a Site + hydrophone so the simulator stream shows up

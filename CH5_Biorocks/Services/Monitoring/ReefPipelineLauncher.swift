@@ -1,4 +1,5 @@
 import Combine
+import Darwin
 import Foundation
 
 /// Launches the vendored `reef_pipeline` Python hydrophone simulator.
@@ -135,7 +136,8 @@ final class ReefPipelineLauncher: ObservableObject {
             Task { @MainActor in
                 self?.isRunning = false
                 self?.process = nil
-                if proc.terminationStatus != 0 && proc.terminationStatus != 15 {
+                // 2 = SIGINT, 9 = SIGKILL, 15 = SIGTERM — expected Stop outcomes.
+                if proc.terminationStatus != 0 && ![2, 9, 15].contains(Int(proc.terminationStatus)) {
                     self?.lastError = "Simulator exited with code \(proc.terminationStatus)"
                 }
                 onLog("reef_pipeline stopped (status \(proc.terminationStatus))")
@@ -144,6 +146,10 @@ final class ReefPipelineLauncher: ObservableObject {
 
         do {
             try process.run()
+            let pid = process.processIdentifier
+            if pid > 0 {
+                _ = setpgid(pid, pid)
+            }
             self.process = process
             isRunning = true
             lastError = nil
@@ -156,11 +162,75 @@ final class ReefPipelineLauncher: ObservableObject {
     }
 
     func stop() {
-        guard let process else { return }
-        process.terminate()
-        self.process = nil
-        isRunning = false
         outputPipe?.fileHandleForReading.readabilityHandler = nil
         errorPipe?.fileHandleForReading.readabilityHandler = nil
+        isRunning = false
+        guard let process else { return }
+        killProcessTree(process)
+        let captured = process
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            if captured.isRunning {
+                Self.forceKill(captured)
+            }
+            await MainActor.run {
+                if self?.process === captured {
+                    self?.process = nil
+                }
+            }
+        }
+    }
+
+    deinit {
+        if let process, process.isRunning {
+            Self.forceKill(process)
+        }
+    }
+
+    private func killProcessTree(_ process: Process) {
+        let pid = process.processIdentifier
+        if pid > 0 {
+            for child in Self.descendantPIDs(of: pid) {
+                kill(child, SIGTERM)
+            }
+            kill(pid, SIGINT)
+            kill(pid, SIGTERM)
+            _ = kill(-pid, SIGTERM)
+        } else {
+            process.interrupt()
+            process.terminate()
+        }
+    }
+
+    nonisolated private static func forceKill(_ process: Process) {
+        let pid = process.processIdentifier
+        if pid > 0 {
+            for child in descendantPIDs(of: pid) {
+                kill(child, SIGKILL)
+            }
+            kill(pid, SIGKILL)
+            _ = kill(-pid, SIGKILL)
+        }
+        if process.isRunning {
+            process.terminate()
+        }
+    }
+
+    nonisolated private static func descendantPIDs(of pid: Int32) -> [Int32] {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+        task.arguments = ["-P", String(pid)]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = FileHandle.nullDevice
+        do {
+            try task.run()
+            task.waitUntilExit()
+        } catch {
+            return []
+        }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let text = String(data: data, encoding: .utf8) ?? ""
+        return text.split(whereSeparator: \.isNewline).compactMap { Int32($0) }
     }
 }

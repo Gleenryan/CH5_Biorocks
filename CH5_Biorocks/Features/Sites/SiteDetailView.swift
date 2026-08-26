@@ -316,7 +316,7 @@ private struct HydrophoneRow: View {
     private var hydrophoneAudioID: String? { liveStatus?.id }
     private var isListening: Bool {
         guard let hydrophoneAudioID else { return false }
-        return store.listeningHydrophoneID == hydrophoneAudioID
+        return store.isPlaying(hydrophoneID: hydrophoneAudioID, connected: isLive)
     }
 
     private var blastEvent: BlastDetectionEvent? {
@@ -461,15 +461,24 @@ private struct HydrophoneRow: View {
 
     @ViewBuilder
     private func audioControl(id: String) -> some View {
-        if isLive {
+        if isListening {
+            Button {
+                hub.stopListening()
+            } label: {
+                Image(systemName: "speaker.slash.fill")
+                    .foregroundStyle(Color.orange)
+            }
+            .buttonStyle(.plain)
+            .help("Stop speaker playback")
+        } else if isLive {
             Button {
                 hub.toggleListen(hydrophoneID: id)
             } label: {
-                Image(systemName: isListening ? "speaker.wave.2.fill" : "speaker.wave.2")
-                    .foregroundStyle(isListening ? Color.green : Color.secondary)
+                Image(systemName: "speaker.wave.2")
+                    .foregroundStyle(Color.secondary)
             }
             .buttonStyle(.plain)
-            .help(isListening ? "Mute this hydrophone" : "Listen to this hydrophone")
+            .help("Listen to this hydrophone")
         } else if store.hasClip[id] == true {
             Button {
                 hub.replay(hydrophoneID: id)

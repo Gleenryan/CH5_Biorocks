@@ -32,6 +32,11 @@ struct SimulatorView: View {
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .onChange(of: launcher.isRunning) { _, running in
+            if !running {
+                hub.haltSimulatorStreams()
+            }
+        }
     }
 
     private var simulatorColumn: some View {
@@ -112,6 +117,12 @@ struct SimulatorView: View {
         }
     }
 
+    private var canEndSimulator: Bool {
+        launcher.isRunning
+            || store.isSpeakerPlaybackActive
+            || store.liveHydrophones.contains(where: \.connected)
+    }
+
     private var launchPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Start simulator")
@@ -136,6 +147,7 @@ struct SimulatorView: View {
             HStack(spacing: 10) {
                 Button {
                     SimulatorCatalog.clearSiteAlerts(modelContext: modelContext)
+                    hub.prepareForSimulatorStart()
                     launcher.start { line in
                         guard !line.isEmpty else { return }
                         store.appendLog(
@@ -158,12 +170,21 @@ struct SimulatorView: View {
                 .disabled(launcher.isRunning || !store.serverReady)
 
                 Button {
-                    launcher.stop()
+                    hub.stopListening()
                 } label: {
-                    Label("Stop", systemImage: "stop.fill")
+                    Label("Mute", systemImage: "speaker.slash.fill")
                 }
                 .buttonStyle(.bordered)
-                .disabled(!launcher.isRunning)
+                .disabled(!store.isSpeakerPlaybackActive)
+
+                Button {
+                    hub.haltSimulatorStreams()
+                    launcher.stop()
+                } label: {
+                    Label("End simulator", systemImage: "stop.fill")
+                }
+                .buttonStyle(.bordered)
+                .disabled(!canEndSimulator)
             }
 
             if let error = launcher.lastError {
@@ -389,7 +410,7 @@ private struct SimulatorHydrophoneCard: View {
     @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse) private var events: [BlastDetectionEvent]
 
     private var isListening: Bool {
-        store.listeningHydrophoneID == hydro.id
+        store.isPlaying(hydrophoneID: hydro.id, connected: hydro.connected)
     }
 
     /// BLAST badge only when this hydrophone actually has a stored detection (by id).
@@ -445,7 +466,15 @@ private struct SimulatorHydrophoneCard: View {
             )
             .frame(height: 56)
 
-            Text(hydro.connected ? "Live scene audio is playing through this hydrophone." : "Stream ended. Replay the clip attached to this hydrophone.")
+            Text(
+                hydro.connected
+                    ? (store.mixingAllLiveAudio
+                        ? "Live scene audio from this hydrophone is mixed to the speakers."
+                        : (isListening
+                            ? "Solo: only this hydrophone is playing through the speakers."
+                            : "Live stream. Press Solo to hear only this hydrophone."))
+                    : "Stream ended. Replay the clip attached to this hydrophone."
+            )
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -455,15 +484,34 @@ private struct SimulatorHydrophoneCard: View {
 
     @ViewBuilder
     private var listenButton: some View {
-        if hydro.connected {
+        if store.mixingAllLiveAudio, hydro.connected {
             Button {
                 hub.toggleListen(hydrophoneID: hydro.id)
             } label: {
-                Label(isListening ? "Listening" : "Listen", systemImage: isListening ? "speaker.wave.2.fill" : "speaker.wave.2")
+                Label("Solo", systemImage: "headphones")
             }
             .buttonStyle(.bordered)
-            .tint(isListening ? .green : .accentColor)
             .controlSize(.small)
+            .help("Play only this hydrophone")
+        } else if isListening {
+            Button {
+                hub.stopListening()
+            } label: {
+                Label("Mute", systemImage: "speaker.slash.fill")
+            }
+            .buttonStyle(.bordered)
+            .tint(.orange)
+            .controlSize(.small)
+            .help("Stop speaker playback")
+        } else if hydro.connected {
+            Button {
+                hub.toggleListen(hydrophoneID: hydro.id)
+            } label: {
+                Label("Listen", systemImage: "speaker.wave.2")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Play this hydrophone through the speakers")
         } else if store.hasClip[hydro.id] == true {
             Button {
                 hub.replay(hydrophoneID: hydro.id)
