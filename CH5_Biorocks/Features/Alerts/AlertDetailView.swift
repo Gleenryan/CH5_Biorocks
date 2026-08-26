@@ -66,7 +66,23 @@ struct AlertDetailView: View {
             VStack(alignment: .leading, spacing: 26) {
                 header
                 detailRow(title: "Location", value: locationName)
-                detailRow(title: "Detection Time", value: "-")
+                detailRow(
+                    title: "Detection Time",
+                    value: event.onsetTime.formatted(date: .abbreviated, time: .standard)
+                )
+                detailRow(
+                    title: "Confidence",
+                    value: String(format: "%.1f%% · %@", event.pBlast * 100, event.topClass)
+                )
+                detailRow(
+                    title: "Domain",
+                    value: event.domainScope.isEmpty ? "indonesia_hydromoth" : event.domainScope
+                )
+                detailRow(title: "Hydrophone", value: event.hydrophoneName)
+                detailRow(title: "Severity", value: event.severity.capitalized)
+                if !event.recommendedAction.isEmpty {
+                    detailRow(title: "Action", value: event.recommendedAction)
+                }
                 alertMap
             }
             .frame(maxWidth: 1_500, alignment: .leading)
@@ -116,8 +132,11 @@ struct AlertDetailView: View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 0) {
                 mapContent
-                Color.green
-                    .accessibilityLabel("Reserved placeholder panel")
+                ExhibitionSidePanel(
+                    title: "Detection scene",
+                    detail: "The beach scene animates in the Python exhibition window. This panel is the on-app half of the side-by-side demo.",
+                    confidence: event.pBlast
+                )
             }
             .frame(minWidth: 760)
             .frame(height: 440)
@@ -125,9 +144,12 @@ struct AlertDetailView: View {
             VStack(spacing: 0) {
                 mapContent
                     .frame(height: 360)
-                Color.green
-                    .frame(height: 180)
-                    .accessibilityLabel("Reserved placeholder panel")
+                ExhibitionSidePanel(
+                    title: "Detection scene",
+                    detail: "The beach scene animates in the Python exhibition window.",
+                    confidence: event.pBlast
+                )
+                .frame(height: 180)
             }
         }
         .frame(maxWidth: .infinity)

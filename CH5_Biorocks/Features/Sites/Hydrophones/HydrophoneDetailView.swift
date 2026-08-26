@@ -90,8 +90,10 @@ struct HydrophoneDetailView: View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 0) {
                 hydrophoneMap
-                Color.green
-                    .accessibilityLabel("Reserved placeholder panel")
+                ExhibitionSidePanel(
+                    title: "Hydrophone stream",
+                    detail: "Use Simulator → Exhibition for the beach/sea scene. Alerts for this hydrophone still appear in Coralyst."
+                )
             }
             .frame(minWidth: 760)
             .frame(height: 300)
@@ -99,9 +101,11 @@ struct HydrophoneDetailView: View {
             VStack(spacing: 0) {
                 hydrophoneMap
                     .frame(height: 260)
-                Color.green
-                    .frame(height: 220)
-                    .accessibilityLabel("Reserved placeholder panel")
+                ExhibitionSidePanel(
+                    title: "Hydrophone stream",
+                    detail: "Use Simulator → Exhibition for the beach/sea scene."
+                )
+                .frame(height: 220)
             }
         }
         .frame(maxWidth: .infinity)

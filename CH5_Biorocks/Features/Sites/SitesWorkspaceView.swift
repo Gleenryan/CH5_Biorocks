@@ -25,7 +25,7 @@ struct SitesWorkspaceView: View {
 
 #Preview {
     let site = Site(
-        name: "Simulator Reef",
+        name: "Indonesia N1",
         startLatitude: -8.1287,
         startLongitude: 114.6608,
         endLatitude: -8.1322,

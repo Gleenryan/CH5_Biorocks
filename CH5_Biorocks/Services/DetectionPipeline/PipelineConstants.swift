@@ -7,10 +7,14 @@ nonisolated enum PipelineConstants {
     static let hopSeconds: Double = 0.25
     static let nSigma: Double = 4.0
     static let refractorySeconds: Double = 1.0
+    /// Core ML blast probability threshold (same order as original Model 2).
     static let blastThreshold: Double = 0.7653
     static let debounceK = 1
     static let debounceN = 3
     static let debounceSpanSeconds: Double = 5.0
+    /// Cap alerts per hydrophone stream so one run cannot flood the dashboard.
+    static let maxPromotionsPerSession = 2
+    static let minPromoteGapSeconds: Double = 6.0
     static let matchWindowSeconds: Double = 2.0
     static let healthPeriodSeconds: Double = 60.0
     static let listenPort: UInt16 = 17_455

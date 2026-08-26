@@ -104,7 +104,7 @@ final class DetectionStore: ObservableObject {
         if let existing {
             existing.name = status.name
             existing.microphoneDeviceID = deviceID
-            existing.microphoneDeviceName = "Detected · Python simulator · \(status.scenarioName)"
+            existing.microphoneDeviceName = "Detected · reef_pipeline · \(status.scenarioName)"
             if let lat = status.latitude { existing.latitude = lat }
             if let lon = status.longitude { existing.longitude = lon }
         } else {
@@ -114,7 +114,7 @@ final class DetectionStore: ObservableObject {
                 latitude: latitude,
                 longitude: longitude,
                 microphoneDeviceID: deviceID,
-                microphoneDeviceName: "Detected · Python simulator · \(status.scenarioName)",
+                microphoneDeviceName: "Detected · reef_pipeline · \(status.scenarioName)",
                 site: site
             )
             modelContext.insert(hydrophone)
@@ -151,7 +151,8 @@ final class DetectionStore: ObservableObject {
             narrative: detection.narrative.displayText,
             narrativeSource: detection.narrative.source,
             severity: detection.narrative.severity,
-            recommendedAction: detection.narrative.recommendedAction
+            recommendedAction: detection.narrative.recommendedAction,
+            domainScope: "indonesia_hydromoth"
         )
         modelContext?.insert(event)
         try? modelContext?.save()

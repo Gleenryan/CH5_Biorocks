@@ -182,8 +182,8 @@ extension HydrophoneHello {
         }
         return HydrophoneHello(
             hydrophoneId: object["hydrophoneId"] as? String ?? UUID().uuidString,
-            hydrophoneName: object["hydrophoneName"] as? String ?? "Sim Hydrophone",
-            siteName: object["siteName"] as? String ?? "Simulator Reef",
+            hydrophoneName: object["hydrophoneName"] as? String ?? "Hydrophone 1",
+            siteName: object["siteName"] as? String ?? "Indonesia N1",
             sampleRate: (object["sampleRate"] as? NSNumber)?.doubleValue ?? PipelineConstants.sampleRate,
             channels: (object["channels"] as? NSNumber)?.intValue ?? 1,
             scenarioId: object["scenarioId"] as? String ?? "unknown",

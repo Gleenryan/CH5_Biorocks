@@ -2,30 +2,86 @@ import SwiftUI
 import SwiftData
 
 struct SimulatorView: View {
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var store: DetectionStore
     @EnvironmentObject private var hub: HydrophoneHub
+    @StateObject private var launcher = ReefPipelineLauncher()
+    @Query(sort: \BlastDetectionEvent.onsetTime, order: .reverse) private var events: [BlastDetectionEvent]
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 0) {
+                simulatorColumn
+                    .frame(minWidth: 420, idealWidth: 560, maxWidth: 720)
+                Divider()
+                resultsColumn
+                    .frame(minWidth: 360, maxWidth: .infinity)
+            }
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    header
+                    statusRow
+                    launchPanel
+                    liveHydrophones
+                    resultsBody
+                    stageLog
+                }
+                .padding(.horizontal, 32)
+                .padding(.vertical, 28)
+            }
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private var simulatorColumn: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
                 statusRow
-                howToRun
+                launchPanel
                 liveHydrophones
-                scorecard
                 stageLog
             }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 28)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private var resultsColumn: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                resultsHeader
+                resultsBody
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+        }
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.35))
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Simulator")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
-            Text("Python pretends to be hydrophones. This Mac runs Model 1, Core ML Model 2, debounce, health indices, and Foundation Models.")
+            Text(headerBlurb)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var headerBlurb: String {
+        if launcher.selectedMode.opensExhibitionWindow {
+            return "Start simulator opens the beach scene with four hydrophones and a blast event. That window streams into this app at the same time — detections appear here on the right."
+        }
+        return "Four hydrophones on Indonesia N1 stream real dataset WAVs. Exactly one hydro gets a blast clip mixed in; the other three are normal field audio only. BLAST badges appear only if Core ML detects a blast on that hydro."
+    }
+
+    private var resultsHeader: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Live results")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+            Text("Core ML detections land here while the simulator is running. Put the beach scene beside this window for the exhibition.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -44,9 +100,9 @@ struct SimulatorView: View {
                 ok: store.serverReady
             )
             StatusChip(
-                title: "Foundation Models",
-                value: FoundationModelNarrator.isAvailable ? "Available" : "Template fallback",
-                ok: FoundationModelNarrator.isAvailable
+                title: "reef_pipeline",
+                value: launcher.isRunning ? (launcher.selectedMode.opensExhibitionWindow ? "Exhibit" : "Streaming") : (launcher.pythonExecutable() != nil ? "Ready" : "Setup needed"),
+                ok: launcher.pythonExecutable() != nil
             )
             StatusChip(
                 title: "Threshold",
@@ -56,22 +112,155 @@ struct SimulatorView: View {
         }
     }
 
-    private var howToRun: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Python hydrophone")
+    private var launchPanel: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Start simulator")
                 .font(.headline)
-            Text("From blast-synth-ml, with the app running:")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            Text(".venv/bin/python -m src.sim.hydrophone_sim --fleet --realtime")
-                .font(.system(.callout, design: .monospaced))
-                .textSelection(.enabled)
-                .padding(12)
+
+            Picker("Mode", selection: $launcher.selectedMode) {
+                ForEach(ReefPipelineLauncher.Mode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(launcher.isRunning)
+
+            Text(
+                launcher.selectedMode.opensExhibitionWindow
+                    ? "Opens the beach / sea scene and streams the four hydrophones into this app."
+                    : "Streams fleet audio into the app without the exhibition window."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            HStack(spacing: 10) {
+                Button {
+                    SimulatorCatalog.clearSiteAlerts(modelContext: modelContext)
+                    launcher.start { line in
+                        guard !line.isEmpty else { return }
+                        store.appendLog(
+                            PipelineLogLine(
+                                hydrophoneName: "reef_pipeline",
+                                stage: "Python",
+                                detail: String(line.prefix(240))
+                            )
+                        )
+                    }
+                } label: {
+                    Label(
+                        launcher.isRunning
+                            ? (launcher.selectedMode.opensExhibitionWindow ? "Simulator live…" : "Streaming…")
+                            : "Start simulator",
+                        systemImage: launcher.selectedMode.opensExhibitionWindow ? "wave.3.right" : "play.fill"
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(launcher.isRunning || !store.serverReady)
+
+                Button {
+                    launcher.stop()
+                } label: {
+                    Label("Stop", systemImage: "stop.fill")
+                }
+                .buttonStyle(.bordered)
+                .disabled(!launcher.isRunning)
+            }
+
+            if let error = launcher.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
+            if launcher.pythonExecutable() == nil {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Python venv not found. Run once in Terminal:")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(launcher.setupHint)
+                        .font(.system(.caption2, design: .monospaced))
+                        .textSelection(.enabled)
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                }
+            } else {
+                Text("Data root: \(launcher.rawDataDirectory.path)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+        }
+        .padding(16)
+        .siteGlassCard(cornerRadius: 16)
+    }
+
+    @ViewBuilder
+    private var resultsBody: some View {
+        liveDetections
+        soundDetails
+        scorecard
+    }
+
+    private var liveDetections: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Blast detections")
+                    .font(.headline)
+                Spacer()
+                Text("\(events.count)")
+                    .font(.caption.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            if events.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(launcher.isRunning ? "Listening… waiting for Core ML to promote a blast." : "No detections yet. Press Start simulator.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    LivePulseBanner(active: launcher.isRunning && !store.liveHydrophones.isEmpty)
+                }
+                .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-            Text("Single hydrophone: --scenario blast_in_ambient --realtime. --fleet streams Simulator Reef (blast), Amed, Nusa Penida, and Tulamben at once.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.7), in: RoundedRectangle(cornerRadius: 12))
+            } else {
+                ForEach(events.prefix(8)) { event in
+                    AlertCard(alert: AlertSummary(event: event), primaryText: .primary)
+                }
+            }
+        }
+        .padding(16)
+        .siteGlassCard(cornerRadius: 16)
+    }
+
+    @ViewBuilder
+    private var soundDetails: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Sound details")
+                .font(.headline)
+            if let health = store.lastHealth {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 12)], spacing: 12) {
+                    SoundMetric(title: "Health", value: String(format: "%.0f · %@", health.healthScore, health.healthClass))
+                    SoundMetric(title: "Snap / min", value: String(format: "%.1f", health.indices.snapRatePerMin))
+                    SoundMetric(title: "SPL low (dB)", value: String(format: "%.1f", health.indices.lowFreqSPL_dB))
+                    SoundMetric(title: "NDSI", value: String(format: "%.3f", health.indices.ndsi))
+                    SoundMetric(title: "ADI", value: String(format: "%.3f", health.indices.adi))
+                    SoundMetric(title: "AEI", value: String(format: "%.3f", health.indices.aei))
+                    SoundMetric(title: "ACI", value: String(format: "%.1f", health.indices.aci))
+                    SoundMetric(title: "Biophony", value: String(format: "%.2f", health.indices.biophonyRatio))
+                    SoundMetric(title: "Anthrophony", value: String(format: "%.2f", health.indices.anthrophonyRatio))
+                    SoundMetric(title: "Blasts (1h)", value: "\(health.blastEventCountLastHour)")
+                }
+                if !health.note.isEmpty {
+                    Text(health.note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text("Sound indices appear after a hydrophone has streamed for about a minute (health window).")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(16)
         .siteGlassCard(cornerRadius: 16)
@@ -82,7 +271,7 @@ struct SimulatorView: View {
             Text("Connected hydrophones")
                 .font(.headline)
             if store.liveHydrophones.isEmpty {
-                Text("Waiting for a Python simulator connection.")
+                Text("Start a stream above, or wait for a Python hydrophone connection.")
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(store.liveHydrophones) { hydro in
@@ -121,7 +310,7 @@ struct SimulatorView: View {
             Text("Pipeline log")
                 .font(.headline)
             if store.log.isEmpty {
-                Text("Model 1 / Model 2 / debounce lines appear here while a hydrophone is streaming.")
+                Text("Connect / gate / classify / alert lines appear here while a hydrophone is streaming.")
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(store.log.prefix(40)) { line in
@@ -148,6 +337,50 @@ struct SimulatorView: View {
     }
 }
 
+private struct LivePulseBanner: View {
+    let active: Bool
+    @State private var pulse = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(active ? Color.green : Color.secondary.opacity(0.4))
+                .frame(width: 10, height: 10)
+                .scaleEffect(active && pulse ? 1.35 : 1.0)
+                .opacity(active && pulse ? 0.55 : 1.0)
+                .animation(
+                    active ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default,
+                    value: pulse
+                )
+            Text(active ? "Fleet audio arriving · watching for impulse + Core ML promote" : "Idle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onAppear { pulse = active }
+        .onChange(of: active) { _, newValue in
+            pulse = newValue
+        }
+    }
+}
+
+private struct SoundMetric: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.callout.weight(.semibold).monospacedDigit())
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.7), in: RoundedRectangle(cornerRadius: 10))
+    }
+}
+
 private struct SimulatorHydrophoneCard: View {
     let hydro: LiveHydrophoneStatus
 
@@ -159,14 +392,22 @@ private struct SimulatorHydrophoneCard: View {
         store.listeningHydrophoneID == hydro.id
     }
 
+    /// BLAST badge only when this hydrophone actually has a stored detection (by id).
     private var hasBlast: Bool {
-        events.contains {
-            $0.hydrophoneId.caseInsensitiveCompare(hydro.id) == .orderedSame
-                || (
-                    $0.hydrophoneName.localizedCaseInsensitiveCompare(hydro.name) == .orderedSame
-                        && $0.siteName.localizedCaseInsensitiveCompare(hydro.siteName) == .orderedSame
-                )
+        let id = hydro.id.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !id.isEmpty else { return false }
+        return events.contains { event in
+            let eventID = normalizedHydrophoneID(event.hydrophoneId)
+            return eventID == id
         }
+    }
+
+    private func normalizedHydrophoneID(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if trimmed.hasPrefix("sim://") {
+            return String(trimmed.dropFirst(6))
+        }
+        return trimmed
     }
 
     var body: some View {
