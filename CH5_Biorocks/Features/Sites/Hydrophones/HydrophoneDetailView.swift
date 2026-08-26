@@ -54,7 +54,7 @@ struct HydrophoneDetailView: View {
                 acousticMetricsSection
                 historyChartsSection
             }
-            .frame(maxWidth: 1_400, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 40)
             .padding(.vertical, 36)
         }
@@ -223,14 +223,15 @@ struct HydrophoneDetailView: View {
             primaryText: primaryText,
             isProminent: true
         )
+        .frame(minWidth: 190, maxWidth: 220)
     }
 
     private var secondaryMetricsGrid: some View {
         LazyVGrid(
             columns: [
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16),
-                GridItem(.flexible(), spacing: 16)
+                GridItem(.flexible(minimum: 160), spacing: 16),
+                GridItem(.flexible(minimum: 160), spacing: 16),
+                GridItem(.flexible(minimum: 160), spacing: 16)
             ],
             spacing: 16
         ) {
@@ -241,6 +242,7 @@ struct HydrophoneDetailView: View {
             metricCard(title: "AEI", keyPath: \.aei, fractionDigits: 2)
             metricCard(title: "Biophony Ratio", keyPath: \.biophonyRatio, fractionDigits: 2)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private func metricCard(
@@ -295,8 +297,7 @@ struct HydrophoneDetailView: View {
             // 6 Secondary Metric Trend Charts
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: 18),
-                    GridItem(.flexible(), spacing: 18)
+                    GridItem(.adaptive(minimum: 360), spacing: 18)
                 ],
                 spacing: 18
             ) {

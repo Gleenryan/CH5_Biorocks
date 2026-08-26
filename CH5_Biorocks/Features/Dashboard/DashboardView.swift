@@ -14,10 +14,6 @@ struct DashboardView: View {
     private var snapshots: [HealthSnapshotRecord]
     @Environment(\.colorScheme) private var colorScheme
 
-    private var hydrophoneCount: Int {
-        sites.reduce(0) { $0 + $1.hydrophones.count }
-    }
-
     private var primaryText: Color {
         colorScheme == .dark ? .white : Color(hex: "0F172A")
     }
@@ -36,10 +32,9 @@ struct DashboardView: View {
                 header
                 recentAlertsSection
                 sitesSummarySection
-                coverageSummary
                 siteStatusSection
             }
-            .frame(maxWidth: 1_400, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 40)
             .padding(.vertical, 36)
         }
@@ -134,18 +129,13 @@ struct DashboardView: View {
                 .buttonStyle(.plain)
             }
 
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 20) {
-                    recentAlertCards
-                }
-
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 300), spacing: 20)],
-                    spacing: 20
-                ) {
-                    recentAlertCards
-                }
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 320, maximum: 480), spacing: 20)],
+                spacing: 20
+            ) {
+                recentAlertCards
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -181,20 +171,13 @@ struct DashboardView: View {
                     .foregroundStyle(primaryText)
             }
 
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 18) {
-                    metricCards
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 175), spacing: 18)],
-                    spacing: 18
-                ) {
-                    metricCards
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 200, maximum: 380), spacing: 18)],
+                spacing: 18
+            ) {
+                metricCards
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -240,31 +223,6 @@ struct DashboardView: View {
             trendIsPositive: events.isEmpty,
             primaryText: primaryText
         )
-    }
-
-    // MARK: - Coverage Summary
-    private var coverageSummary: some View {
-        HStack(spacing: 20) {
-            InfoItem(
-                title: "Active Hydrophones",
-                value: "\(hydrophoneCount)/\(max(hydrophoneCount, sites.count * 3))",
-                systemImage: "waveform",
-                primaryText: primaryText
-            )
-            InfoItem(
-                title: "Depth Range",
-                value: "4 – 15m",
-                systemImage: "water.waves",
-                primaryText: primaryText
-            )
-            InfoItem(
-                title: "Total Coverage",
-                value: coverageText,
-                systemImage: "circle.circle",
-                primaryText: primaryText
-            )
-            Spacer()
-        }
     }
 
     // MARK: - Site Status Card & Map
@@ -460,14 +418,6 @@ struct DashboardView: View {
         }
         .padding(.vertical, 6)
         .padding(.trailing, 6)
-    }
-
-    private var coverageText: String {
-        let squareMeters = sites.reduce(0.0) { total, site in
-            total + .pi * pow(site.coverageRadiusMeters, 2)
-        }
-        guard squareMeters > 0 else { return "—" }
-        return "\((squareMeters / 1_000_000).formatted(.number.precision(.fractionLength(1)))) km²"
     }
 
     private func healthValue(for site: Site) -> String {

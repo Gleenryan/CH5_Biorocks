@@ -93,15 +93,15 @@ struct AlertsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 24) {
                 Text(scope.title)
-                    .font(.system(size: 42, weight: .bold))
+                    .font(.system(size: 38, weight: .bold))
                     .foregroundStyle(primaryText)
 
                 filterTabs
 
                 Text(selectedFilter.sectionTitle)
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(primaryText)
 
                 if filteredEvents.isEmpty {
@@ -110,9 +110,9 @@ struct AlertsView: View {
                     alertGrid
                 }
             }
-            .frame(maxWidth: 1_440, alignment: .leading)
-            .padding(.horizontal, 28)
-            .padding(.vertical, 30)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 40)
+            .padding(.vertical, 36)
         }
         .scrollIndicators(.hidden)
         .background(Color(nsColor: .windowBackgroundColor))
@@ -126,16 +126,16 @@ struct AlertsView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 7) {
                         Text(filter.tabTitle)
-                            .font(.caption.weight(.semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(
                                 selectedFilter == filter
                                     ? primaryText
-                                    : primaryText.opacity(0.68)
+                                    : primaryText.opacity(0.65)
                             )
 
                         Rectangle()
                             .fill(selectedFilter == filter ? Color.coralystPrimary : .clear)
-                            .frame(width: 52, height: 2)
+                            .frame(height: 2.5)
                     }
                 }
                 .buttonStyle(.plain)
@@ -147,9 +147,9 @@ struct AlertsView: View {
 
     private var alertGrid: some View {
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 270, maximum: 300), spacing: 38)],
+            columns: [GridItem(.adaptive(minimum: 320, maximum: 480), spacing: 20)],
             alignment: .leading,
-            spacing: 16
+            spacing: 20
         ) {
             ForEach(filteredEvents) { event in
                 Button {
@@ -159,12 +159,12 @@ struct AlertsView: View {
                         alert: AlertSummary(event: event),
                         primaryText: primaryText
                     )
-                    .frame(maxWidth: 300, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Open alert details")
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var emptyState: some View {

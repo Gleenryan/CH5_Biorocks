@@ -51,6 +51,7 @@ enum SimulatorCatalog {
     static func bootstrap(modelContext: ModelContext) {
         purgeExtraSites(modelContext: modelContext)
         ensureFleet(modelContext: modelContext)
+        ensureSampleAlerts(modelContext: modelContext)
         try? modelContext.save()
     }
 
@@ -79,6 +80,71 @@ enum SimulatorCatalog {
         let snapshots = (try? modelContext.fetch(FetchDescriptor<HealthSnapshotRecord>())) ?? []
         for snapshot in snapshots where snapshot.siteName.localizedCaseInsensitiveCompare(siteName) != .orderedSame {
             modelContext.delete(snapshot)
+        }
+    }
+
+    @MainActor
+    static func ensureSampleAlerts(modelContext: ModelContext) {
+        let events = (try? modelContext.fetch(FetchDescriptor<BlastDetectionEvent>())) ?? []
+        guard events.isEmpty else { return }
+
+        let now = Date()
+        let sampleAlerts = [
+            BlastDetectionEvent(
+                siteName: siteName,
+                hydrophoneName: "Hydrophone 1",
+                hydrophoneId: "sim://\(UUIDV5.dns("Hydrophone 1").uuidString.lowercased())",
+                source: "reef_pipeline",
+                scenarioId: "blast_in_ambient",
+                onsetTime: now.addingTimeInterval(-3600 * 2),
+                pBlast: 0.94,
+                topClass: "blast",
+                topConfidence: 0.94,
+                narrative: "Suspected Blast Event\nHigh-energy impulsive detonation signature detected with sharp rise time and dominant low-frequency shockwave.",
+                narrativeSource: "Core ML Classifier",
+                severity: "High",
+                recommendedAction: "Dispatch local marine patrol for inspection and deploy emergency acoustic surveillance protocol.",
+                createdAt: now.addingTimeInterval(-3600 * 2),
+                domainScope: "indonesia_hydromoth"
+            ),
+            BlastDetectionEvent(
+                siteName: siteName,
+                hydrophoneName: "Hydrophone 2",
+                hydrophoneId: "sim://\(UUIDV5.dns("Hydrophone 2").uuidString.lowercased())",
+                source: "reef_pipeline",
+                scenarioId: "boat_pass",
+                onsetTime: now.addingTimeInterval(-3600 * 6),
+                pBlast: 0.28,
+                topClass: "boat_engine",
+                topConfidence: 0.82,
+                narrative: "High-Frequency Vessel Intrusion\nProlonged low-to-mid frequency propulsion resonance detected crossing perimeter boundary.",
+                narrativeSource: "Core ML Classifier",
+                severity: "Medium",
+                recommendedAction: "Monitor vessel trajectory on marine tracker and record baseline soundscape impact.",
+                createdAt: now.addingTimeInterval(-3600 * 6),
+                domainScope: "indonesia_hydromoth"
+            ),
+            BlastDetectionEvent(
+                siteName: siteName,
+                hydrophoneName: "Hydrophone 3",
+                hydrophoneId: "sim://\(UUIDV5.dns("Hydrophone 3").uuidString.lowercased())",
+                source: "reef_pipeline",
+                scenarioId: "ambient",
+                onsetTime: now.addingTimeInterval(-3600 * 18),
+                pBlast: 0.08,
+                topClass: "biophony_shift",
+                topConfidence: 0.75,
+                narrative: "Biophony Activity Variance\nTemporary decrease in snapping shrimp pulse frequency and biological acoustic diversity.",
+                narrativeSource: "Acoustic Index Monitor",
+                severity: "Low",
+                recommendedAction: "Review subsequent 6-hour acoustic health snapshot trend for recovery.",
+                createdAt: now.addingTimeInterval(-3600 * 18),
+                domainScope: "indonesia_hydromoth"
+            )
+        ]
+
+        for alert in sampleAlerts {
+            modelContext.insert(alert)
         }
     }
 

@@ -87,18 +87,13 @@ struct SiteOverviewView: View {
                 .buttonStyle(.plain)
             }
 
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 20) {
-                    recentAlertCards
-                }
-
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 300), spacing: 20)],
-                    spacing: 20
-                ) {
-                    recentAlertCards
-                }
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 320, maximum: 480), spacing: 20)],
+                spacing: 20
+            ) {
+                recentAlertCards
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -134,30 +129,13 @@ struct SiteOverviewView: View {
                     .foregroundStyle(primaryText)
             }
 
-            // 5 Metric Cards
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 18) {
-                    metricCards
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 175), spacing: 18)],
-                    spacing: 18
-                ) {
-                    metricCards
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 200, maximum: 380), spacing: 18)],
+                spacing: 18
+            ) {
+                metricCards
             }
-
-            HStack(spacing: 5) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 11))
-                Text("Trend compares the two latest available telemetry windows")
-                    .font(.system(size: 12))
-            }
-            .foregroundStyle(.secondary)
-            .padding(.top, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

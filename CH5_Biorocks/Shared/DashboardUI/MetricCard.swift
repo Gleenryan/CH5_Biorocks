@@ -62,12 +62,13 @@ struct MetricCard: View {
             Spacer(minLength: 12)
 
             // Middle Row: Big Value + Trend Pill
-            HStack(alignment: .lastTextBaseline, spacing: 10) {
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
                 Text(value)
-                    .font(.system(size: isProminent ? 58 : 38, weight: .bold, design: .rounded))
+                    .font(.system(size: isProminent ? 52 : 30, weight: .bold, design: .rounded))
                     .foregroundStyle(primaryText)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.6)
+                    .layoutPriority(1)
 
                 if let trend, !trend.trimmingCharacters(in: .whitespaces).isEmpty {
                     let displayTrend = trend
@@ -76,7 +77,7 @@ struct MetricCard: View {
                         .replacingOccurrences(of: "−", with: "")
                         .trimmingCharacters(in: .whitespaces)
 
-                    Spacer(minLength: 4)
+                    Spacer(minLength: 2)
 
                     HStack(spacing: 3) {
                         Image(systemName: trendIsPositive ? "arrow.up.right" : "arrow.down.right")
@@ -117,7 +118,7 @@ struct MetricCard: View {
         .padding(18)
         .frame(
             minWidth: 150,
-            maxWidth: isProminent ? 230 : 210,
+            maxWidth: isProminent ? 230 : .infinity,
             minHeight: isProminent ? 300 : 142,
             maxHeight: isProminent ? 300 : 142,
             alignment: .topLeading
