@@ -1,0 +1,37 @@
+{
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Data/Stores/DetectionStore.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DetectionStore.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DetectionStore.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DetectionStore.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DetectionStore.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DetectionStore.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Alerts/AlertDetailView.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertDetailView.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertDetailView.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertDetailView.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertDetailView.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertDetailView.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Alerts/AlertsView.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertsView.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertsView.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertsView.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertsView.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AlertsView.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/CoralHealth/CoralHealthView.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/CoralHealthView.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/CoralHealthView.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/CoralHealthView.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/CoralHealthView.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/CoralHealthView.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Dashboard/DashboardView.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DashboardView.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DashboardView.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DashboardView.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DashboardView.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/DashboardView.swiftdeps"
+  }
+}

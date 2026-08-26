@@ -16,7 +16,7 @@ struct SiteOverviewView: View {
     @Query(sort: \HealthSnapshotRecord.windowStart, order: .reverse) private var snapshots: [HealthSnapshotRecord]
 
     private var primaryText: Color {
-        colorScheme == .dark ? .primary : .coralystText
+        colorScheme == .dark ? .white : Color(hex: "0F172A")
     }
 
     private var siteEvents: [BlastDetectionEvent] {
@@ -36,60 +36,66 @@ struct SiteOverviewView: View {
     }
 
     private var recentEvents: [BlastDetectionEvent] {
-        Array(siteEvents.prefix(4))
+        Array(siteEvents.prefix(3))
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 28) {
-            alertsAndMap
-            summaryMetrics
-            informationSummary
-            hydrophoneList
+        VStack(alignment: .leading, spacing: 44) {
+            recentAlertsSection
+            siteSummarySection
+            hydrophoneFleetSection
         }
     }
 
-    private var alertsAndMap: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 20) {
-                alertsPanel
-                    .frame(minWidth: 520, maxWidth: .infinity)
-                overviewMap
-                    .frame(minWidth: 520, maxWidth: .infinity)
-            }
+    // MARK: - 1. Recent Alerts Section
+    private var recentAlertsSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center) {
+                HStack(spacing: 8) {
+                    Image(systemName: "bell.badge.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color(hex: "EF4444"))
 
-            VStack(alignment: .leading, spacing: 20) {
-                alertsPanel
-                overviewMap
-            }
-        }
-    }
+                    Text("Recent Alerts")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(primaryText)
 
-    private var alertsPanel: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Recent Alerts")
-                    .font(.system(size: 31, weight: .bold))
-                    .foregroundStyle(primaryText)
+                    if !siteEvents.isEmpty {
+                        Text("\(siteEvents.count)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2.5)
+                            .background(Color(hex: "EF4444"), in: Capsule())
+                    }
+                }
 
                 Spacer()
 
                 Button(action: onViewAlerts) {
-                    Label("More Alerts", systemImage: "chevron.right")
+                    HStack(spacing: 5) {
+                        Text("All Alerts")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.coralystPrimary.opacity(0.1), in: Capsule())
                 }
                 .buttonStyle(.plain)
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(primaryText)
             }
 
             ViewThatFits(in: .horizontal) {
-                LazyVGrid(
-                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
-                    spacing: 12
-                ) {
+                HStack(spacing: 20) {
                     recentAlertCards
                 }
 
-                VStack(spacing: 12) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 300), spacing: 20)],
+                    spacing: 20
+                ) {
                     recentAlertCards
                 }
             }
@@ -99,9 +105,8 @@ struct SiteOverviewView: View {
     @ViewBuilder
     private var recentAlertCards: some View {
         if recentEvents.isEmpty {
-            ForEach(AlertSummary.preview.prefix(4)) { alert in
+            ForEach(AlertSummary.preview.prefix(3)) { alert in
                 AlertCard(alert: alert, primaryText: primaryText)
-                    .frame(maxWidth: 300, alignment: .leading)
             }
         } else {
             ForEach(recentEvents) { event in
@@ -109,7 +114,6 @@ struct SiteOverviewView: View {
                     onSelectAlert(event)
                 } label: {
                     AlertCard(alert: AlertSummary(event: event), primaryText: primaryText)
-                        .frame(maxWidth: 300, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Open alert details")
@@ -117,45 +121,43 @@ struct SiteOverviewView: View {
         }
     }
 
-    private var overviewMap: some View {
-        SiteMapView(site: site)
-            .frame(minHeight: 370)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(10)
-            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(primaryText.opacity(colorScheme == .dark ? 0.35 : 0.75), lineWidth: 1)
+    // MARK: - 2. Site Summary & Telemetry
+    private var siteSummarySection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
+
+                Text("Site Summary & Telemetry")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(primaryText)
             }
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.14 : 0.10), radius: 7, y: 3)
-    }
 
-    private var summaryMetrics: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Site Summary")
-                .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(primaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
-
+            // 5 Metric Cards
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 18) {
                     metricCards
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 180, maximum: 180), spacing: 18)],
-                    spacing: 16
+                    columns: [GridItem(.adaptive(minimum: 175), spacing: 18)],
+                    spacing: 18
                 ) {
                     metricCards
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            Text("*Trend compares the two latest available readings")
-                .font(.callout.italic())
-                .foregroundStyle(primaryText.opacity(0.88))
-                .frame(maxWidth: .infinity, alignment: .center)
+            HStack(spacing: 5) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 11))
+                Text("Trend compares the two latest available telemetry windows")
+                    .font(.system(size: 12))
+            }
+            .foregroundStyle(.secondary)
+            .padding(.top, 2)
         }
     }
 
@@ -208,146 +210,199 @@ struct SiteOverviewView: View {
         )
     }
 
-    private var informationSummary: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 64) {
-                InfoItem(
-                    title: "Active Hydrophones",
-                    value: "\(liveCount)/\(hydrophones.count)",
-                    systemImage: "waveform",
-                    primaryText: primaryText
-                )
-                InfoItem(
-                    title: "Depth Range",
-                    value: "Not recorded",
-                    systemImage: "water.waves",
-                    primaryText: primaryText
-                )
-                InfoItem(
-                    title: "Coverage Area",
-                    value: coverageAreaText,
-                    systemImage: "circle.circle",
-                    primaryText: primaryText
-                )
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
+    // MARK: - 3. Hydrophone Fleet Section
+    private var hydrophoneFleetSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                Image(systemName: "mic.badge.waveform")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
 
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 210), spacing: 24)],
-                spacing: 18
-            ) {
-                InfoItem(title: "Active Hydrophones", value: "\(liveCount)/\(hydrophones.count)", systemImage: "waveform", primaryText: primaryText)
-                InfoItem(title: "Depth Range", value: "Not recorded", systemImage: "water.waves", primaryText: primaryText)
-                InfoItem(title: "Coverage Area", value: coverageAreaText, systemImage: "circle.circle", primaryText: primaryText)
+                Text("Hydrophone Fleet")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(primaryText)
+
+                Text("\(hydrophones.count)")
+                    .font(.system(size: 11.5, weight: .bold))
+                    .foregroundStyle(Color.coralystPrimary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.coralystPrimary.opacity(0.12), in: Capsule())
             }
-            .frame(maxWidth: .infinity, alignment: .center)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 24) {
+                    compactSquareMap
+                        .frame(width: 380, height: 360)
+
+                    hydrophoneGridCard
+                        .frame(minWidth: 480, maxWidth: .infinity, alignment: .leading)
+                }
+
+                VStack(alignment: .leading, spacing: 24) {
+                    compactSquareMap
+                        .frame(width: 380, height: 340)
+
+                    hydrophoneGridCard
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
     }
 
-    private var hydrophoneList: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Hydrophone List")
-                .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(primaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
+    // MARK: - Compact Square Map Component
+    private var compactSquareMap: some View {
+        ZStack(alignment: .topLeading) {
+            SiteMapView(site: site)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
 
+            // Floating Array Badge
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 7, height: 7)
+                Text("\(hydrophones.count) Positioned")
+                    .font(.system(size: 11.5, weight: .bold))
+                    .foregroundStyle(primaryText)
+            }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.primary.opacity(0.1), lineWidth: 1))
+            .padding(12)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06), lineWidth: 1)
+        }
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.04), radius: 10, y: 3)
+    }
+
+    // MARK: - Hydrophone Fleet Table Card
+    private var hydrophoneGridCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
             if hydrophones.isEmpty {
                 ContentUnavailableView {
-                    Label("No Hydrophones", systemImage: "mic.slash")
+                    Label("No Hydrophones Registered", systemImage: "mic.slash")
                 } description: {
-                    Text("Add a hydrophone from Sensors to begin monitoring this Site.")
+                    Text("Add a hydrophone to begin monitoring telemetry for this site.")
                 } actions: {
-                    Button("Open Sensors", action: onViewSensors)
+                    Button("Add Hydrophone", action: onViewSensors)
                         .buttonStyle(.borderedProminent)
+                        .tint(Color.coralystPrimary)
                 }
-                .frame(maxWidth: .infinity, minHeight: 180)
+                .padding(36)
+                .frame(maxWidth: .infinity, minHeight: 300)
             } else {
-                ViewThatFits(in: .horizontal) {
-                    hydrophoneGrid
-                    hydrophoneCompactList
-                }
-            }
-        }
-        .padding(.bottom, 12)
-    }
-
-    private var hydrophoneGrid: some View {
-        Grid(alignment: .leading, horizontalSpacing: 26, verticalSpacing: 16) {
-            GridRow {
-                tableHeading("Hydrophone")
-                tableHeading("Last Update")
-                tableHeading("Health\nComposition")
-                tableHeading("NDSI")
-                tableHeading("Snap Rate")
-                Color.clear.frame(width: 14)
-            }
-
-            Divider().gridCellColumns(6)
-
-            ForEach(hydrophones) { hydrophone in
-                GridRow {
-                    Text(hydrophone.name).lineLimit(1)
-                    Text(lastUpdateText(for: hydrophone)).lineLimit(1)
-                    Text(healthValue(for: hydrophone)).lineLimit(1)
-                    Text(ndsiValue(for: hydrophone)).lineLimit(1)
-                    Text(snapRateValue(for: hydrophone)).lineLimit(1)
-                    Image(systemName: "chevron.right")
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(primaryText)
-                }
-                .font(.title3)
-                .foregroundStyle(primaryText)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    onSelectHydrophone(hydrophone)
-                }
-                .help("Open hydrophone details")
-            }
-        }
-        .frame(minWidth: 760, alignment: .leading)
-    }
-
-    private var hydrophoneCompactList: some View {
-        VStack(spacing: 10) {
-            ForEach(hydrophones) { hydrophone in
-                Button {
-                    onSelectHydrophone(hydrophone)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "mic.fill")
-                            .foregroundStyle(primaryText)
-                            .frame(width: 30, height: 30)
-                            .background(Color.cyan.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(hydrophone.name)
-                                .font(.headline)
-                            Text("\(lastUpdateText(for: hydrophone)) · NDSI \(ndsiValue(for: hydrophone)) · Snap \(snapRateValue(for: hydrophone))")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundStyle(primaryText)
+                Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 14) {
+                    GridRow {
+                        tableHeader("HYDROPHONE")
+                        tableHeader("STATUS / LAST SEEN")
+                        tableHeader("HEALTH")
+                        tableHeader("NDSI")
+                        tableHeader("SNAP RATE")
+                        tableHeader("ACTION")
                     }
-                    .foregroundStyle(primaryText)
-                    .padding(12)
-                    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+
+                    Divider()
+                        .gridCellColumns(6)
+                        .padding(.vertical, 4)
+
+                    ForEach(hydrophones) { hydrophone in
+                        let isLive = store.liveHydrophones.contains { $0.name == hydrophone.name && $0.connected }
+                        let health = healthValue(for: hydrophone)
+
+                        GridRow {
+                            // Hydrophone Name with Icon
+                            HStack(spacing: 10) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.coralystPrimary.opacity(0.12))
+                                        .frame(width: 32, height: 32)
+                                    Image(systemName: "mic.fill")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Color.coralystPrimary)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(hydrophone.name)
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundStyle(primaryText)
+
+                                    Text("\(hydrophone.latitude.formatted(.number.precision(.fractionLength(3)))), \(hydrophone.longitude.formatted(.number.precision(.fractionLength(3))))")
+                                        .font(.system(size: 11, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+
+                            // Last Update & Live Status
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(isLive ? Color(hex: "10B981") : Color(hex: "94A3B8"))
+                                    .frame(width: 7, height: 7)
+                                Text(isLive ? "Live Streaming" : lastUpdateText(for: hydrophone))
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(isLive ? Color(hex: "10B981") : .secondary)
+                            }
+
+                            // Health Score
+                            HStack(spacing: 4) {
+                                Text(health)
+                                    .font(.system(size: 13.5, weight: .bold, design: .rounded))
+                                    .foregroundStyle(health == "—" ? .secondary : Color(hex: "10B981"))
+                            }
+
+                            // NDSI
+                            Text(ndsiValue(for: hydrophone))
+                                .font(.system(size: 13.5, weight: .medium, design: .monospaced))
+                                .foregroundStyle(primaryText)
+
+                            // Snap Rate
+                            Text(snapRateValue(for: hydrophone))
+                                .font(.system(size: 13.5, weight: .medium, design: .rounded))
+                                .foregroundStyle(primaryText)
+
+                            // Action Inspect Button
+                            Button {
+                                onSelectHydrophone(hydrophone)
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Text("Inspect")
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 10, weight: .bold))
+                                }
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Color.coralystPrimary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(Color.coralystPrimary.opacity(0.1), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                            .help("Inspect hydrophone telemetry")
+                        }
+                        .padding(.vertical, 7)
+
+                        Divider()
+                            .gridCellColumns(6)
+                            .opacity(0.35)
+                    }
                 }
-                .buttonStyle(.plain)
             }
         }
-    }
-
-    private var coverageAreaText: String {
-        let area = Double.pi * pow(site.coverageRadiusMeters, 2)
-        guard area > 0 else { return "—" }
-        if area >= 1_000_000 {
-            return "\((area / 1_000_000).formatted(.number.precision(.fractionLength(1)))) km²"
+        .padding(22)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06), lineWidth: 1)
         }
-        return "\(area.formatted(.number.precision(.fractionLength(0)))) m²"
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.04), radius: 10, y: 3)
     }
 
     private func trend(
@@ -391,14 +446,14 @@ struct SiteOverviewView: View {
 
     private func snapRateValue(for hydrophone: CustomLocation) -> String {
         guard let snapshot = healthSnapshot(for: hydrophone) else { return "—" }
-        return String(format: "%.0f", snapshot.snapRatePerMin)
+        return String(format: "%.0f/m", snapshot.snapRatePerMin)
     }
 
-    private func tableHeading(_ text: String) -> some View {
+    private func tableHeader(_ text: String) -> some View {
         Text(text)
-            .font(.title3.weight(.semibold))
-            .foregroundStyle(primaryText)
-            .fixedSize(horizontal: false, vertical: true)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(.secondary)
+            .tracking(0.5)
     }
 }
 

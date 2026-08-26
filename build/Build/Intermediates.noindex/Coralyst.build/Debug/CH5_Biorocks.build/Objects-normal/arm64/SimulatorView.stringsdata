@@ -1,0 +1,280 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Simulator/SimulatorView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Simulator",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "Live results",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 82
+        }
+      },
+      {
+        "comment": "",
+        "key": "Core ML detections land here while the simulator is running. Put the beach scene beside this window for the exhibition.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Start simulator",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "Data root: %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "Mode",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "Opens the beach / sea scene and streams the four hydrophones into this app.",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 130
+        }
+      },
+      {
+        "comment": "",
+        "key": "Streams fleet audio into the app without the exhibition window.",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Simulator live…",
+        "location": {
+          "startingColumn": 78,
+          "startingLine": 152
+        }
+      },
+      {
+        "comment": "",
+        "key": "Streaming…",
+        "location": {
+          "startingColumn": 100,
+          "startingLine": 152
+        }
+      },
+      {
+        "comment": "",
+        "key": "Start simulator",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stop",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Python venv not found. Run once in Terminal:",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 177
+        }
+      },
+      {
+        "comment": "",
+        "key": "Blast detections",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 208
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 211
+        }
+      },
+      {
+        "comment": "",
+        "key": "Listening… waiting for Core ML to promote a blast.",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 218
+        }
+      },
+      {
+        "comment": "",
+        "key": "No detections yet. Press Start simulator.",
+        "location": {
+          "startingColumn": 104,
+          "startingLine": 218
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sound details",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 239
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sound indices appear after a hydrophone has streamed for about a minute (health window).",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 260
+        }
+      },
+      {
+        "comment": "",
+        "key": "Connected hydrophones",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 271
+        }
+      },
+      {
+        "comment": "",
+        "key": "Start a stream above, or wait for a Python hydrophone connection.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 274
+        }
+      },
+      {
+        "comment": "",
+        "key": "Last scenario scorecard",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 290
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pipeline log",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 310
+        }
+      },
+      {
+        "comment": "",
+        "key": "Connect / gate / classify / alert lines appear here while a hydrophone is streaming.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 313
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ · %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 325
+        }
+      },
+      {
+        "comment": "",
+        "key": "Fleet audio arriving · watching for impulse + Core ML promote",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 355
+        }
+      },
+      {
+        "comment": "",
+        "key": "Idle",
+        "location": {
+          "startingColumn": 94,
+          "startingLine": 355
+        }
+      },
+      {
+        "comment": "",
+        "key": "Live scene audio is playing through this hydrophone.",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 448
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stream ended. Replay the clip attached to this hydrophone.",
+        "location": {
+          "startingColumn": 93,
+          "startingLine": 448
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ · %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 431
+        }
+      },
+      {
+        "comment": "",
+        "key": "BLAST",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 423
+        }
+      },
+      {
+        "comment": "",
+        "key": "Listening",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 462
+        }
+      },
+      {
+        "comment": "",
+        "key": "Listen",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 462
+        }
+      },
+      {
+        "comment": "",
+        "key": "Replay",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 471
+        }
+      }
+    ]
+  },
+  "version": 1
+}

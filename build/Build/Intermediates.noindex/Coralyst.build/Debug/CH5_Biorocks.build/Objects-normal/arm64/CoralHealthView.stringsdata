@@ -1,0 +1,64 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/CoralHealth/CoralHealthView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "No Coral Health Data",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 19
+        }
+      },
+      {
+        "comment": "",
+        "key": "Acoustic-index snapshots are computed from hydrophone audio every minute (or once per short simulator run). This is an unsupervised composite, not a trained healthy/degraded classifier.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 21
+        }
+      },
+      {
+        "comment": "",
+        "key": "Foundation Models unavailable — templated fallback",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Acoustic composite",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "Composite over time",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 82
+        }
+      },
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "Score",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 87
+        }
+      }
+    ]
+  },
+  "version": 1
+}

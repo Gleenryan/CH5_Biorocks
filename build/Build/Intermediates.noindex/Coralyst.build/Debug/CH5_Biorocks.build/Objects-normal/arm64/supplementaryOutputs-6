@@ -1,0 +1,37 @@
+{
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/SiteSettingsOverlay.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SiteSettingsOverlay.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SiteSettingsOverlay.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SiteSettingsOverlay.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SiteSettingsOverlay.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SiteSettingsOverlay.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/SitesWorkspaceView.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SitesWorkspaceView.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SitesWorkspaceView.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SitesWorkspaceView.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SitesWorkspaceView.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/SitesWorkspaceView.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Services/Audio/HydrophoneAudioMonitor.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/HydrophoneAudioMonitor.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/HydrophoneAudioMonitor.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/HydrophoneAudioMonitor.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/HydrophoneAudioMonitor.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/HydrophoneAudioMonitor.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Services/Audio/MicrophoneInputTester.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/MicrophoneInputTester.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/MicrophoneInputTester.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/MicrophoneInputTester.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/MicrophoneInputTester.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/MicrophoneInputTester.swiftdeps"
+  },
+  "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Services/DetectionPipeline/AudioFeatureExtractor.swift" : {
+    "const-values" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AudioFeatureExtractor.swiftconstvalues",
+    "dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AudioFeatureExtractor.d",
+    "diagnostics" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AudioFeatureExtractor.dia",
+    "object" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AudioFeatureExtractor.o",
+    "swift-dependencies" : "/Users/prisha/Desktop/CH5_Biorocks/build/Build/Intermediates.noindex/Coralyst.build/Debug/CH5_Biorocks.build/Objects-normal/arm64/AudioFeatureExtractor.swiftdeps"
+  }
+}

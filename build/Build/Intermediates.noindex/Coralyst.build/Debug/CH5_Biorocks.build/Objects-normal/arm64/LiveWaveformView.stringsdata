@@ -1,0 +1,24 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Shared/AudioUI/LiveWaveformView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Live hydrophone waveform",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 36
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hydrophone waveform",
+        "location": {
+          "startingColumn": 67,
+          "startingLine": 36
+        }
+      }
+    ]
+  },
+  "version": 1
+}

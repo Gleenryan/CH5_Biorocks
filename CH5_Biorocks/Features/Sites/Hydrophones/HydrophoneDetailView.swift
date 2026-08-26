@@ -14,7 +14,7 @@ struct HydrophoneDetailView: View {
     @Query(sort: \HealthSnapshotRecord.windowStart, order: .reverse) private var snapshots: [HealthSnapshotRecord]
 
     private var primaryText: Color {
-        colorScheme == .dark ? .primary : .coralystText
+        colorScheme == .dark ? .white : Color(hex: "0F172A")
     }
 
     private var hydrophoneSnapshots: [HealthSnapshotRecord] {
@@ -48,121 +48,166 @@ struct HydrophoneDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 42) {
                 header
-                mapAndPlaceholder
-                status
-                historyCharts
+                heroSection
+                acousticMetricsSection
+                historyChartsSection
             }
-            .frame(maxWidth: 1_500, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .frame(maxWidth: 1_400, alignment: .leading)
+            .padding(.horizontal, 40)
+            .padding(.vertical, 36)
         }
         .scrollIndicators(.hidden)
+        .background(
+            Color(nsColor: .windowBackgroundColor)
+                .ignoresSafeArea()
+        )
     }
 
+    // MARK: - Header
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Button(action: onBack) {
-                Label("Back", systemImage: "chevron.left")
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 14) {
+                Button(action: onBack) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("Back to \(site.name)")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.coralystPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Color.coralystPrimary.opacity(0.1), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .help("Return to site overview")
+
+                Spacer()
+
+                // Status Badge
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(isOnline ? Color(hex: "10B981") : Color(hex: "94A3B8"))
+                        .frame(width: 8, height: 8)
+                        .overlay(
+                            Circle()
+                                .stroke((isOnline ? Color(hex: "10B981") : Color.clear).opacity(0.4), lineWidth: 3)
+                                .scaleEffect(1.4)
+                        )
+
+                    Text(isOnline ? "LIVE STREAMING" : "STANDBY")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(isOnline ? Color(hex: "10B981") : .secondary)
+                }
+                .padding(.horizontal, 11)
+                .padding(.vertical, 5.5)
+                .background(
+                    (isOnline ? Color(hex: "10B981") : Color(hex: "94A3B8"))
+                        .opacity(colorScheme == .dark ? 0.18 : 0.1),
+                    in: Capsule()
+                )
+                .overlay(
+                    Capsule()
+                        .stroke((isOnline ? Color(hex: "10B981") : Color.secondary).opacity(0.3), lineWidth: 1)
+                )
             }
-            .buttonStyle(.plain)
-            .font(.caption)
-            .foregroundStyle(primaryText)
 
-            Divider()
-                .frame(height: 24)
-
-            Text("\(hydrophone.name) Details")
-                .font(.system(size: 25, weight: .bold))
+            Text(hydrophone.name)
+                .font(.system(size: 34, weight: .bold))
                 .foregroundStyle(primaryText)
-                .lineLimit(1)
 
-            Label(isOnline ? "Online" : "Offline", systemImage: isOnline ? "checkmark.circle.fill" : "circle.fill")
-                .font(.headline)
-                .foregroundStyle(isOnline ? .green : .secondary)
-
-            Spacer(minLength: 0)
+            Text("Coordinates: \(hydrophone.latitude.formatted(.number.precision(.fractionLength(5))))°, \(hydrophone.longitude.formatted(.number.precision(.fractionLength(5))))° • Site: \(site.name)")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
         }
     }
 
-    private var mapAndPlaceholder: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 0) {
-                hydrophoneMap
-                ExhibitionSidePanel(
-                    title: "Hydrophone stream",
-                    detail: "Use Simulator → Exhibition for the beach/sea scene. Alerts for this hydrophone still appear in Coralyst."
-                )
-            }
-            .frame(minWidth: 760)
-            .frame(height: 300)
-
-            VStack(spacing: 0) {
-                hydrophoneMap
-                    .frame(height: 260)
-                ExhibitionSidePanel(
-                    title: "Hydrophone stream",
-                    detail: "Use Simulator → Exhibition for the beach/sea scene."
-                )
-                .frame(height: 220)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(primaryText.opacity(colorScheme == .dark ? 0.35 : 0.75), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(colorScheme == .dark ? 0.14 : 0.10), radius: 7, y: 3)
+    // MARK: - Location Map
+    private var heroSection: some View {
+        hydrophoneMap
+            .frame(maxWidth: .infinity)
+            .frame(height: 250)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.04), radius: 10, y: 3)
     }
 
     private var hydrophoneMap: some View {
-        Map(initialPosition: .region(mapRegion)) {
-            Annotation("Hydrophone", coordinate: hydrophone.coordinate, anchor: .bottom) {
-                VStack(spacing: 7) {
-                    Text(coordinateText)
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.regularMaterial, in: Capsule())
-                        .shadow(color: .black.opacity(0.18), radius: 5, y: 3)
+        ZStack(alignment: .topLeading) {
+            Map(initialPosition: .region(mapRegion)) {
+                Annotation(hydrophone.name, coordinate: hydrophone.coordinate, anchor: .bottom) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 28, height: 28)
+                            .background(Color.coralystPrimary, in: Circle())
+                            .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
 
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.green)
-                        .frame(width: 30, height: 30)
-                        .background(.regularMaterial, in: Circle())
+                        Text(hydrophone.name)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(primaryText)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.ultraThinMaterial, in: Capsule())
+                    }
                 }
             }
-        }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
-        .mapControls {
-            MapCompass()
-            MapScaleView()
+            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .mapControls {
+                MapCompass()
+                MapScaleView()
+            }
+
+            // Map Badge
+            HStack(spacing: 5) {
+                Image(systemName: "location.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.coralystPrimary)
+                Text(coordinateText)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(primaryText)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5.5)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.primary.opacity(0.1), lineWidth: 1))
+            .padding(12)
         }
     }
 
-    private var status: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Status")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(primaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
+    // MARK: - Acoustic Metrics Section
+    private var acousticMetricsSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
+
+                Text("Acoustic Health & Bio-Indicators")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(primaryText)
+            }
 
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: 20) {
+                HStack(alignment: .top, spacing: 18) {
                     prominentMetric
-                    secondaryMetrics
+                    secondaryMetricsGrid
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
 
-                VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
                     prominentMetric
-                    secondaryMetrics
+                    secondaryMetricsGrid
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
     }
@@ -180,12 +225,12 @@ struct HydrophoneDetailView: View {
         )
     }
 
-    private var secondaryMetrics: some View {
+    private var secondaryMetricsGrid: some View {
         LazyVGrid(
             columns: [
-                GridItem(.fixed(180), spacing: 16),
-                GridItem(.fixed(180), spacing: 16),
-                GridItem(.fixed(180), spacing: 16)
+                GridItem(.flexible(), spacing: 16),
+                GridItem(.flexible(), spacing: 16),
+                GridItem(.flexible(), spacing: 16)
             ],
             spacing: 16
         ) {
@@ -221,31 +266,100 @@ struct HydrophoneDetailView: View {
         )
     }
 
-    private var historyCharts: some View {
+    // MARK: - History Trend Charts Section
+    private var historyChartsSection: some View {
         VStack(alignment: .leading, spacing: 22) {
+            HStack(spacing: 8) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
+
+                Text("Historical Spectral Trends")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(primaryText)
+            }
+
+            // Prominent Health Composite Trend Chart
             HydrophoneTrendChart(
-                title: "Health Composite",
-                subtitle: "A hypothesis-weighted unsupervised composite calculated from acoustic features.",
+                title: "Health Composite Score",
+                subtitle: "Hypothesis-weighted unsupervised composite calculated from bioacoustic & anthrophony features",
+                currentValue: latestSnapshot.map { String(format: "%.0f / 100", $0.healthScore) } ?? "—",
                 snapshots: chartSnapshots,
                 keyPath: \.healthScore,
                 yDomain: 0 ... 100,
-                height: 230,
+                height: 220,
+                accentColor: Color(hex: "10B981"),
                 primaryText: primaryText
             )
 
+            // 6 Secondary Metric Trend Charts
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: 16),
-                    GridItem(.flexible(), spacing: 16)
+                    GridItem(.flexible(), spacing: 18),
+                    GridItem(.flexible(), spacing: 18)
                 ],
-                spacing: 22
+                spacing: 18
             ) {
-                HydrophoneTrendChart(title: "NDSI", subtitle: "Normalized Difference Soundscape Index.", snapshots: chartSnapshots, keyPath: \.ndsi, yDomain: -1 ... 1, primaryText: primaryText)
-                HydrophoneTrendChart(title: "Snap Rate", subtitle: "Snapping shrimp noise rate per minute.", snapshots: chartSnapshots, keyPath: \.snapRatePerMin, yDomain: 0 ... 100, primaryText: primaryText)
-                HydrophoneTrendChart(title: "ADI", subtitle: "Acoustic Diversity Index.", snapshots: chartSnapshots, keyPath: \.adi, yDomain: 0 ... 1, primaryText: primaryText)
-                HydrophoneTrendChart(title: "AEI", subtitle: "Acoustic Evenness Index.", snapshots: chartSnapshots, keyPath: \.aei, yDomain: 0 ... 1, primaryText: primaryText)
-                HydrophoneTrendChart(title: "Low Freq dBFS", subtitle: "Low-frequency decibels relative to full scale.", snapshots: chartSnapshots, keyPath: \.lowFreqSPL_dB, yDomain: -100 ... 0, primaryText: primaryText)
-                HydrophoneTrendChart(title: "Biophony", subtitle: "Collective noise produced by living organisms in the reef ecosystem.", snapshots: chartSnapshots, keyPath: \.biophonyRatio, yDomain: 0 ... 1, primaryText: primaryText)
+                HydrophoneTrendChart(
+                    title: "NDSI",
+                    subtitle: "Normalized Difference Soundscape Index (-1.0 to +1.0)",
+                    currentValue: latestSnapshot.map { String(format: "%.2f", $0.ndsi) } ?? "—",
+                    snapshots: chartSnapshots,
+                    keyPath: \.ndsi,
+                    yDomain: -1 ... 1,
+                    accentColor: Color(hex: "0EA5E9"),
+                    primaryText: primaryText
+                )
+                HydrophoneTrendChart(
+                    title: "Snap Rate",
+                    subtitle: "Snapping shrimp acoustic pulse frequency per minute",
+                    currentValue: latestSnapshot.map { String(format: "%.0f /min", $0.snapRatePerMin) } ?? "—",
+                    snapshots: chartSnapshots,
+                    keyPath: \.snapRatePerMin,
+                    yDomain: 0 ... 100,
+                    accentColor: Color(hex: "F59E0B"),
+                    primaryText: primaryText
+                )
+                HydrophoneTrendChart(
+                    title: "ADI",
+                    subtitle: "Acoustic Diversity Index (spectral band entropy)",
+                    currentValue: latestSnapshot.map { String(format: "%.2f", $0.adi) } ?? "—",
+                    snapshots: chartSnapshots,
+                    keyPath: \.adi,
+                    yDomain: 0 ... 1,
+                    accentColor: Color(hex: "8B5CF6"),
+                    primaryText: primaryText
+                )
+                HydrophoneTrendChart(
+                    title: "AEI",
+                    subtitle: "Acoustic Evenness Index (spectral band balance)",
+                    currentValue: latestSnapshot.map { String(format: "%.2f", $0.aei) } ?? "—",
+                    snapshots: chartSnapshots,
+                    keyPath: \.aei,
+                    yDomain: 0 ... 1,
+                    accentColor: Color(hex: "EC4899"),
+                    primaryText: primaryText
+                )
+                HydrophoneTrendChart(
+                    title: "Low Frequency dBFS",
+                    subtitle: "Low-frequency SPL decibels relative to full scale",
+                    currentValue: latestSnapshot.map { String(format: "%.1f dBFS", $0.lowFreqSPL_dB) } ?? "—",
+                    snapshots: chartSnapshots,
+                    keyPath: \.lowFreqSPL_dB,
+                    yDomain: -100 ... 0,
+                    accentColor: Color(hex: "6366F1"),
+                    primaryText: primaryText
+                )
+                HydrophoneTrendChart(
+                    title: "Biophony Ratio",
+                    subtitle: "Proportion of biological noise vs anthrophony in reef band",
+                    currentValue: latestSnapshot.map { String(format: "%.2f", $0.biophonyRatio) } ?? "—",
+                    snapshots: chartSnapshots,
+                    keyPath: \.biophonyRatio,
+                    yDomain: 0 ... 1,
+                    accentColor: Color(hex: "10B981"),
+                    primaryText: primaryText
+                )
             }
         }
     }
@@ -258,7 +372,7 @@ struct HydrophoneDetailView: View {
     }
 
     private var coordinateText: String {
-        "\(hydrophone.latitude.formatted(.number.precision(.fractionLength(5)))), \(hydrophone.longitude.formatted(.number.precision(.fractionLength(5))))"
+        "\(hydrophone.latitude.formatted(.number.precision(.fractionLength(4)))), \(hydrophone.longitude.formatted(.number.precision(.fractionLength(4))))"
     }
 
     private func metricTrend(
@@ -283,59 +397,133 @@ private struct HydrophoneMetricTrend {
     let isPositive: Bool
 }
 
+// MARK: - Modern Elevated Trend Chart Component
 private struct HydrophoneTrendChart: View {
     let title: String
     let subtitle: String
+    let currentValue: String
     let snapshots: [HealthSnapshotRecord]
     let keyPath: KeyPath<HealthSnapshotRecord, Double>
     let yDomain: ClosedRange<Double>
-    var height: CGFloat = 190
+    var height: CGFloat = 175
+    var accentColor: Color = Color.coralystPrimary
     let primaryText: Color
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(title)
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(primaryText)
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isHovered = false
 
-                Text(subtitle)
-                    .font(.caption.italic())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Header Row: Title, Subtitle & Current Value Badge
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(primaryText)
+
+                    Text(subtitle)
+                        .font(.system(size: 11.5, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                // Current Latest Value Pill
+                Text(currentValue)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(accentColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4.5)
+                    .background(accentColor.opacity(colorScheme == .dark ? 0.2 : 0.1), in: Capsule())
             }
 
             if snapshots.count < 2 {
                 ContentUnavailableView {
-                    Label("No data yet", systemImage: "chart.line.downtrend.xyaxis")
+                    Label("Awaiting telemetry data", systemImage: "chart.line.downtrend.xyaxis")
+                        .font(.system(size: 13, weight: .medium))
                 } description: {
-                    Text("This hydrophone needs at least two saved readings to show a trend.")
+                    Text("Telemetry readings will graph automatically once received.")
+                        .font(.system(size: 11))
                 }
                 .frame(maxWidth: .infinity, minHeight: height)
             } else {
                 Chart(snapshots) { snapshot in
+                    // Area Gradient Fill below curve
+                    AreaMark(
+                        x: .value("Time", snapshot.windowStart),
+                        y: .value(title, snapshot[keyPath: keyPath])
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [
+                                accentColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
+                                accentColor.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+
+                    // Line Stroke
                     LineMark(
                         x: .value("Time", snapshot.windowStart),
                         y: .value(title, snapshot[keyPath: keyPath])
                     )
-                    .foregroundStyle(Color.coralystText)
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(accentColor)
                     .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
 
+                    // Data Point Nodes
                     PointMark(
                         x: .value("Time", snapshot.windowStart),
                         y: .value(title, snapshot[keyPath: keyPath])
                     )
-                    .foregroundStyle(Color.coralystText)
-                    .symbolSize(28)
+                    .foregroundStyle(accentColor)
+                    .symbolSize(22)
                 }
                 .chartYScale(domain: yDomain)
                 .chartLegend(.hidden)
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                            .foregroundStyle(Color.primary.opacity(0.08))
+                        AxisValueLabel()
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { _ in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                            .foregroundStyle(Color.primary.opacity(0.08))
+                        AxisValueLabel()
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 .frame(height: height)
             }
         }
-        .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.10), radius: 6, y: 3)
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(
+                    isHovered ? accentColor.opacity(0.4) : Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06),
+                    lineWidth: 1
+                )
+        }
+        .shadow(
+            color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.04),
+            radius: 8,
+            y: 3
+        )
+        .onHover { isHovered = $0 }
     }
 }
 
@@ -344,7 +532,6 @@ private struct HydrophoneDetailPreviewSample {
     let site: Site
     let hydrophone: CustomLocation
 
-    // Preview-only sample data so every chart renders in the Xcode canvas.
     static func make() -> Self {
         let container = try! ModelContainer(
             for: Site.self,

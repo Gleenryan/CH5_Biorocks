@@ -1,0 +1,40 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Alerts/AlertDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Back",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "Alert location",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "Location unavailable",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 202
+        }
+      },
+      {
+        "comment": "",
+        "key": "This alert is not linked to a saved Site or hydrophone.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 204
+        }
+      }
+    ]
+  },
+  "version": 1
+}

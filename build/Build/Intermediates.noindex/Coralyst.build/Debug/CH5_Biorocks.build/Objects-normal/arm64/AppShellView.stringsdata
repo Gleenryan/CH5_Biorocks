@@ -1,0 +1,40 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/App/AppShellView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Delete %@?",
+        "location": {
+          "startingColumn": 13,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Site",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 105
+        }
+      },
+      {
+        "comment": "",
+        "key": "The Site and all of its hydrophones will be permanently removed.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 107
+        }
+      }
+    ]
+  },
+  "version": 1
+}

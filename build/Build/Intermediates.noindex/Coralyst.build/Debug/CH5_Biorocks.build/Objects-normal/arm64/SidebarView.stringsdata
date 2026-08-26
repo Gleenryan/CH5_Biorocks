@@ -1,0 +1,80 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/App/Navigation/SidebarView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Reef Monitor",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 82
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tools",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "Home",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 26
+        }
+      },
+      {
+        "comment": "",
+        "key": "Alerts",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Sites yet",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Site",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Site",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sites",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 69
+        }
+      },
+      {
+        "comment": "",
+        "key": "Simulator",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 76
+        }
+      }
+    ]
+  },
+  "version": 1
+}

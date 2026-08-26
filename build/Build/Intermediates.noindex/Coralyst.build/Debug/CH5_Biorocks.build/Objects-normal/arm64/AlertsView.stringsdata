@@ -1,0 +1,40 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Alerts/AlertsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Selected",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 77,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open alert details",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 165
+        }
+      },
+      {
+        "comment": "",
+        "key": "No %@",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 172
+        }
+      }
+    ]
+  },
+  "version": 1
+}

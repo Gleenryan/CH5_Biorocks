@@ -1,0 +1,32 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Shared/AlertUI/ExhibitionSidePanel.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Exhibition acoustic scene panel",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 76
+        }
+      },
+      {
+        "comment": "",
+        "key": "Python exhibit  ·  Coralyst results",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 70
+        }
+      },
+      {
+        "comment": "",
+        "key": "Model confidence",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 49
+        }
+      }
+    ]
+  },
+  "version": 1
+}

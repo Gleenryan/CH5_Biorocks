@@ -1,0 +1,128 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/SiteOverviewView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Recent Alerts",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "All Alerts",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 77
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open alert details",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 119
+        }
+      },
+      {
+        "comment": "",
+        "key": "Site Summary & Telemetry",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "Trend compares the two latest available telemetry windows",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hydrophone Fleet",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 221
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 225
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld Positioned",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 264
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Hydrophones Registered",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 290
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add a hydrophone to begin monitoring telemetry for this site.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 292
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Hydrophone",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 294
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inspect hydrophone telemetry",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 385
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 336
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inspect",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 374
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,136 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Dashboard/DashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Real-time reef acoustic intelligence, bio-acoustic metrics & blast detection",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "All Sites Overview",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 57
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE MONITORING",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recent Alerts",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 106
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "All Alerts",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open alert details",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 166
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sites Summary",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 179
+        }
+      },
+      {
+        "comment": "",
+        "key": "Site Status & Spatial Monitoring",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 278
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld Monitored %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 339
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Sites Registered",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 351
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add your first Site to display its real-time status and telemetry.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 353
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Site",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 355
+        }
+      },
+      {
+        "comment": "",
+        "key": "0 Clear",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 424
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld Alert%@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 431
+        }
+      },
+      {
+        "comment": "",
+        "key": "No active monitoring sites",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 453
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,160 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/Hydrophones/Components/HydrophoneFormCard.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Edit Hydrophone",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "New Hydrophone",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 63
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter valid coordinates to preview on map",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "Move the microphone, then release to confirm",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double-click the microphone to move it",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Hydrophone",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 166
+        }
+      },
+      {
+        "comment": "",
+        "key": "No microphone inputs are currently available.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 304
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose a microphone to test it.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 308
+        }
+      },
+      {
+        "comment": "",
+        "key": "Input microphone",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 265
+        }
+      },
+      {
+        "comment": "",
+        "key": "INPUT MICROPHONE",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 252
+        }
+      },
+      {
+        "comment": "",
+        "key": "Refresh microphones",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 262
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose a microphone",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 266
+        }
+      },
+      {
+        "comment": "",
+        "key": "Unavailable: %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 269
+        }
+      },
+      {
+        "comment": "",
+        "key": "Microphone working",
+        "location": {
+          "startingColumn": 81,
+          "startingLine": 285
+        }
+      },
+      {
+        "comment": "",
+        "key": "Microphone not receiving audio",
+        "location": {
+          "startingColumn": 104,
+          "startingLine": 285
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stop Test",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 293
+        }
+      },
+      {
+        "comment": "",
+        "key": "Test Microphone",
+        "location": {
+          "startingColumn": 71,
+          "startingLine": 293
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,256 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/SiteDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Reef deployment station • %lld Hydrophones configured • %@°, %@°",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 164
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open site settings",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 161
+        }
+      },
+      {
+        "comment": "",
+        "key": "ACTIVE SITE",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Site Settings",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hydrophone Sensors",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 174
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage microphones and their positions for this Site.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 177
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Hydrophone",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sensors",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 202
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 205
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Hydrophones",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 217
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add a hydrophone, or run the Python simulator — detected streams appear here automatically.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete %@?",
+        "location": {
+          "startingColumn": 13,
+          "startingLine": 438
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 368
+        }
+      },
+      {
+        "comment": "",
+        "key": "Blast alert · P %@ · %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 374
+        }
+      },
+      {
+        "comment": "",
+        "key": "Scenario audio attached",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 385
+        }
+      },
+      {
+        "comment": "",
+        "key": "BLAST",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 359
+        }
+      },
+      {
+        "comment": "",
+        "key": "Detected",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 350
+        }
+      },
+      {
+        "comment": "",
+        "key": "Simulator",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 350
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Hydrophone",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 408
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Hydrophone",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 416
+        }
+      },
+      {
+        "comment": "",
+        "key": "Mute this hydrophone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 472
+        }
+      },
+      {
+        "comment": "",
+        "key": "Listen to this hydrophone",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 472
+        }
+      },
+      {
+        "comment": "",
+        "key": "Replay attached scenario audio",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 480
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 432
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 433
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Hydrophone",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 442
+        }
+      },
+      {
+        "comment": "",
+        "key": "This hydrophone will be permanently removed from this Site.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 444
+        }
+      },
+      {
+        "comment": "",
+        "key": "Live",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 495
+        }
+      },
+      {
+        "comment": "",
+        "key": "Idle",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 495
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hydrophone streaming",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 502
+        }
+      },
+      {
+        "comment": "",
+        "key": "No live stream",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 502
+        }
+      }
+    ]
+  },
+  "version": 1
+}

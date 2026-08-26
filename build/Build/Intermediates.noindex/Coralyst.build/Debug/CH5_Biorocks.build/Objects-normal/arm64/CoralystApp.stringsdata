@@ -1,0 +1,16 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/App/CoralystApp.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Reef Monitor",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 10
+        }
+      }
+    ]
+  },
+  "version": 1
+}

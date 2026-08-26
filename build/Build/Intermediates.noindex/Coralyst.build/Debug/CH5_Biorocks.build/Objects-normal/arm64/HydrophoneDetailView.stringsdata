@@ -1,0 +1,104 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/Hydrophones/HydrophoneDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Coordinates: %@°, %@° • Site: %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "Return to site overview",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "Back to %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 76
+        }
+      },
+      {
+        "comment": "",
+        "key": "LIVE STREAMING",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "STANDBY",
+        "location": {
+          "startingColumn": 56,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "Acoustic Health & Bio-Indicators",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "Historical Spectral Trends",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 277
+        }
+      },
+      {
+        "comment": "",
+        "key": "Awaiting telemetry data",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 443
+        }
+      },
+      {
+        "comment": "",
+        "key": "Telemetry readings will graph automatically once received.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 446
+        }
+      },
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 454
+        }
+      },
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 471
+        }
+      },
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 480
+        }
+      }
+    ]
+  },
+  "version": 1
+}

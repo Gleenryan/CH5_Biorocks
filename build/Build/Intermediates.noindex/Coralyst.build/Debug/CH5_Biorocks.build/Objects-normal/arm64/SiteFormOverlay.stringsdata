@@ -1,0 +1,72 @@
+{
+  "source": "/Users/prisha/Desktop/CH5_Biorocks/CH5_Biorocks/Features/Sites/Components/SiteFormOverlay.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "New Site",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 36
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Coordinates must use latitude −90…90 and longitude −180…180.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 89
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create Site",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double-click Start or Finish to move it",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 179
+        }
+      },
+      {
+        "comment": "",
+        "key": "Move %@, then release to confirm",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 169
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter valid Start and Finish coordinates to preview the Site",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 196
+        }
+      }
+    ]
+  },
+  "version": 1
+}

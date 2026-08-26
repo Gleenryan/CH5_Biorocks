@@ -15,10 +15,10 @@ struct SitesWorkspaceView: View {
             onViewSiteAlerts: onViewSiteAlerts,
             onSelectAlert: onSelectAlert
         )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 28)
-        .padding(.top, 24)
-        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 40)
+        .padding(.top, 28)
+        .padding(.bottom, 36)
         .background(Color(nsColor: .windowBackgroundColor))
     }
 }
