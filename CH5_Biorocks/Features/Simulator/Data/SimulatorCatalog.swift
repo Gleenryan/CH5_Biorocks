@@ -27,72 +27,57 @@ enum UUIDV5 {
 }
 
 enum SimulatorCatalog {
+    /// Single site; hydrophones around this location.
+    /// Blast vs field audio is decided by reef_pipeline at stream time (not hardcoded here).
+    static let siteName = "Indonesia N1"
+    static let siteLatitude = -8.1287
+    static let siteLongitude = 114.6608
+
     struct Spec {
         let siteName: String
         let hydrophoneName: String
         let latitude: Double
         let longitude: Double
-        let scenarioName: String
-        let injectBlast: Bool
     }
 
     static let fleet: [Spec] = [
-        Spec(
-            siteName: "Simulator Reef",
-            hydrophoneName: "Sim Hydro 1",
-            latitude: -8.1287,
-            longitude: 114.6608,
-            scenarioName: "blast_in_ambient",
-            injectBlast: true
-        ),
-        Spec(
-            siteName: "Simulator Amed",
-            hydrophoneName: "Sim Hydro Amed",
-            latitude: -8.3378,
-            longitude: 115.6594,
-            scenarioName: "ambient",
-            injectBlast: false
-        ),
-        Spec(
-            siteName: "Simulator Nusa Penida",
-            hydrophoneName: "Sim Hydro Penida",
-            latitude: -8.7278,
-            longitude: 115.5442,
-            scenarioName: "boat_pass",
-            injectBlast: false
-        ),
-        Spec(
-            siteName: "Simulator Tulamben",
-            hydrophoneName: "Sim Hydro Tulamben",
-            latitude: -8.2774,
-            longitude: 115.4965,
-            scenarioName: "ambient",
-            injectBlast: false
-        )
+        Spec(siteName: siteName, hydrophoneName: "Hydrophone 1", latitude: -8.1287, longitude: 114.6608),
+        Spec(siteName: siteName, hydrophoneName: "Hydrophone 2", latitude: -8.1264, longitude: 114.6636),
+        Spec(siteName: siteName, hydrophoneName: "Hydrophone 3", latitude: -8.1312, longitude: 114.6582),
+        Spec(siteName: siteName, hydrophoneName: "Hydrophone 4", latitude: -8.1271, longitude: 114.6574),
     ]
 
     @MainActor
     static func bootstrap(modelContext: ModelContext) {
-        purgeDemos(modelContext: modelContext)
+        purgeExtraSites(modelContext: modelContext)
         ensureFleet(modelContext: modelContext)
-        ensureBlastAlert(modelContext: modelContext)
+        try? modelContext.save()
+    }
+
+    /// Call when starting a new simulator stream so Bomb Alerts reflect this run only.
+    @MainActor
+    static func clearSiteAlerts(modelContext: ModelContext) {
+        let events = (try? modelContext.fetch(FetchDescriptor<BlastDetectionEvent>())) ?? []
+        for event in events {
+            modelContext.delete(event)
+        }
         try? modelContext.save()
     }
 
     @MainActor
-    static func purgeDemos(modelContext: ModelContext) {
+    static func purgeExtraSites(modelContext: ModelContext) {
         let sites = (try? modelContext.fetch(FetchDescriptor<Site>())) ?? []
-        for site in sites where isDemoName(site.name) || isLeftoverEmptyPemuteran(site) {
+        for site in sites where site.name.localizedCaseInsensitiveCompare(siteName) != .orderedSame {
             modelContext.delete(site)
         }
 
         let events = (try? modelContext.fetch(FetchDescriptor<BlastDetectionEvent>())) ?? []
-        for event in events where isDemoName(event.siteName) {
+        for event in events where event.siteName.localizedCaseInsensitiveCompare(siteName) != .orderedSame {
             modelContext.delete(event)
         }
 
         let snapshots = (try? modelContext.fetch(FetchDescriptor<HealthSnapshotRecord>())) ?? []
-        for snapshot in snapshots where isDemoName(snapshot.siteName) {
+        for snapshot in snapshots where snapshot.siteName.localizedCaseInsensitiveCompare(siteName) != .orderedSame {
             modelContext.delete(snapshot)
         }
     }
@@ -100,24 +85,38 @@ enum SimulatorCatalog {
     @MainActor
     static func ensureFleet(modelContext: ModelContext) {
         let sites = (try? modelContext.fetch(FetchDescriptor<Site>())) ?? []
-        for spec in fleet {
-            let site = sites.first { $0.name.localizedCaseInsensitiveCompare(spec.siteName) == .orderedSame }
-                ?? {
-                    let created = Site(
-                        name: spec.siteName,
-                        startLatitude: spec.latitude - 0.003,
-                        startLongitude: spec.longitude - 0.004,
-                        endLatitude: spec.latitude + 0.003,
-                        endLongitude: spec.longitude + 0.006
-                    )
-                    modelContext.insert(created)
-                    return created
-                }()
+        let lats = fleet.map(\.latitude)
+        let lons = fleet.map(\.longitude)
+        let pad = 0.004
+        let site = sites.first { $0.name.localizedCaseInsensitiveCompare(siteName) == .orderedSame }
+            ?? {
+                let created = Site(
+                    name: siteName,
+                    startLatitude: (lats.min() ?? siteLatitude) - pad,
+                    startLongitude: (lons.min() ?? siteLongitude) - pad,
+                    endLatitude: (lats.max() ?? siteLatitude) + pad,
+                    endLongitude: (lons.max() ?? siteLongitude) + pad
+                )
+                modelContext.insert(created)
+                return created
+            }()
 
+        site.startLatitude = (lats.min() ?? siteLatitude) - pad
+        site.startLongitude = (lons.min() ?? siteLongitude) - pad
+        site.endLatitude = (lats.max() ?? siteLatitude) + pad
+        site.endLongitude = (lons.max() ?? siteLongitude) + pad
+
+        let wantedNames = Set(fleet.map { $0.hydrophoneName.lowercased() })
+        for hydro in site.hydrophones where !wantedNames.contains(hydro.name.lowercased()) {
+            modelContext.delete(hydro)
+        }
+
+        for spec in fleet {
             let hydroID = UUIDV5.dns(spec.hydrophoneName)
             let deviceID = "sim://\(hydroID.uuidString.lowercased())"
             let existing = site.hydrophones.first {
-                $0.microphoneDeviceID == deviceID
+                $0.id == hydroID
+                    || $0.microphoneDeviceID == deviceID
                     || $0.name.localizedCaseInsensitiveCompare(spec.hydrophoneName) == .orderedSame
             }
             if let existing {
@@ -125,7 +124,7 @@ enum SimulatorCatalog {
                 existing.latitude = spec.latitude
                 existing.longitude = spec.longitude
                 existing.microphoneDeviceID = deviceID
-                existing.microphoneDeviceName = "Python simulator · \(spec.scenarioName)"
+                existing.microphoneDeviceName = "reef_pipeline"
             } else {
                 let hydrophone = CustomLocation(
                     id: hydroID,
@@ -133,56 +132,12 @@ enum SimulatorCatalog {
                     latitude: spec.latitude,
                     longitude: spec.longitude,
                     microphoneDeviceID: deviceID,
-                    microphoneDeviceName: "Python simulator · \(spec.scenarioName)",
+                    microphoneDeviceName: "reef_pipeline",
                     site: site
                 )
                 modelContext.insert(hydrophone)
                 site.hydrophones.append(hydrophone)
             }
         }
-    }
-
-    @MainActor
-    static func ensureBlastAlert(modelContext: ModelContext) {
-        guard let spec = fleet.first(where: \.injectBlast) else { return }
-        let hydroID = UUIDV5.dns(spec.hydrophoneName).uuidString.lowercased()
-        let events = (try? modelContext.fetch(FetchDescriptor<BlastDetectionEvent>())) ?? []
-        if events.contains(where: { $0.hydrophoneId.lowercased() == hydroID }) {
-            return
-        }
-
-        let narrative = FoundationModelNarrator.templatedAlert(
-            site: spec.siteName,
-            time: Date().formatted(date: .omitted, time: .shortened),
-            pBlast: 0.882,
-            alerted: true
-        )
-        let event = BlastDetectionEvent(
-            siteName: spec.siteName,
-            hydrophoneName: spec.hydrophoneName,
-            hydrophoneId: hydroID,
-            source: "simulator",
-            scenarioId: spec.scenarioName,
-            onsetTime: Date().addingTimeInterval(-12),
-            pBlast: 0.882,
-            topClass: "blast",
-            topConfidence: 0.882,
-            narrative: narrative.displayText,
-            narrativeSource: narrative.source,
-            severity: "medium",
-            recommendedAction: narrative.recommendedAction
-        )
-        modelContext.insert(event)
-    }
-
-    private static func isDemoName(_ name: String) -> Bool {
-        let folded = name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-        return folded.contains("(demo)")
-            || folded.hasSuffix(" demo")
-    }
-
-    private static func isLeftoverEmptyPemuteran(_ site: Site) -> Bool {
-        site.name.localizedCaseInsensitiveCompare("Pemuteran Reef Site") == .orderedSame
-            && site.hydrophones.isEmpty
     }
 }

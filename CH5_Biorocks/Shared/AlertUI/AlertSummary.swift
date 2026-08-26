@@ -11,7 +11,8 @@ struct AlertSummary: Identifiable {
     init(event: BlastDetectionEvent) {
         id = event.id
         title = event.narrative.split(separator: "\n").first.map(String.init) ?? "Blast detection"
-        detail = "\(event.siteName) · \(event.onsetTime.formatted(date: .abbreviated, time: .shortened))"
+        let scope = event.domainScope.isEmpty ? "indonesia_hydromoth" : event.domainScope
+        detail = "\(event.siteName) · \(event.onsetTime.formatted(date: .abbreviated, time: .shortened)) · \(scope)"
         severity = event.severity
         message = event.narrative
     }

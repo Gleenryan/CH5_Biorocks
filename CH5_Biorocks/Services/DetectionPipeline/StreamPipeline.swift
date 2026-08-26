@@ -145,6 +145,16 @@ nonisolated final class StreamPipeline: @unchecked Sendable {
                 )
             )
             if decision.promote {
+                if promotions.count >= PipelineConstants.maxPromotionsPerSession {
+                    onLog?(
+                        PipelineLogLine(
+                            hydrophoneName: hello.hydrophoneName,
+                            stage: "Alert",
+                            detail: "Skipped promote — session already at \(PipelineConstants.maxPromotionsPerSession) blast alert(s)"
+                        )
+                    )
+                    return
+                }
                 promotions.append(candidate.onsetTime)
                 Task {
                     let timeText = ISO8601DateFormatter().string(from: Date().addingTimeInterval(candidate.onsetTime - elapsed()))

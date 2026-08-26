@@ -18,6 +18,8 @@ final class BlastDetectionEvent {
     var severity: String
     var recommendedAction: String
     var createdAt: Date
+    /// Blast domain scope from reef_pipeline (e.g. indonesia_hydromoth). Empty for legacy rows.
+    var domainScope: String
 
     init(
         id: UUID = UUID(),
@@ -34,7 +36,8 @@ final class BlastDetectionEvent {
         narrativeSource: String,
         severity: String,
         recommendedAction: String,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        domainScope: String = "indonesia_hydromoth"
     ) {
         self.id = id
         self.siteName = siteName
@@ -51,5 +54,6 @@ final class BlastDetectionEvent {
         self.severity = severity
         self.recommendedAction = recommendedAction
         self.createdAt = createdAt
+        self.domainScope = domainScope
     }
 }

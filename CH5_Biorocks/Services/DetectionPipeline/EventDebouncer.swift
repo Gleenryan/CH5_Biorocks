@@ -22,7 +22,8 @@ nonisolated struct EventDebouncer: Sendable {
         recent.removeAll { time - $0.time > PipelineConstants.debounceSpanSeconds }
         let window = Array(recent.suffix(PipelineConstants.debounceN))
         let votes = window.filter(\.alertVote).count
-        let promote = vote && votes >= PipelineConstants.debounceK && (time - lastPromote) >= 2.0
+        let promote = vote && votes >= PipelineConstants.debounceK
+            && (time - lastPromote) >= PipelineConstants.minPromoteGapSeconds
         if promote {
             lastPromote = time
         }

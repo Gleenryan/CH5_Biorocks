@@ -279,13 +279,14 @@ private struct HydrophoneRow: View {
     private var blastEvent: BlastDetectionEvent? {
         let deviceID = hydrophone.microphoneDeviceID ?? ""
         let simID = deviceID.hasPrefix("sim://") ? String(deviceID.dropFirst(6)) : deviceID
+        let liveID = liveStatus?.id ?? ""
+        let candidates = [simID, liveID, hydrophone.id.uuidString]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
         return events.first { event in
-            event.hydrophoneId.caseInsensitiveCompare(simID) == .orderedSame
-                || event.hydrophoneId.caseInsensitiveCompare(deviceID) == .orderedSame
-                || (
-                    event.hydrophoneName.localizedCaseInsensitiveCompare(hydrophone.name) == .orderedSame
-                        && event.siteName.localizedCaseInsensitiveCompare(hydrophone.site?.name ?? "") == .orderedSame
-                )
+            let eventID = event.hydrophoneId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let normalized = eventID.hasPrefix("sim://") ? String(eventID.dropFirst(6)) : eventID
+            return candidates.contains(normalized)
         }
     }
 

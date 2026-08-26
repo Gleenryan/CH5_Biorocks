@@ -62,3 +62,11 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Python
+Python/.venv/
+Python/**/__pycache__/
+Python/.pytest_cache/
+Python/.numba_cache/
+*.pyc
+
