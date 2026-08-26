@@ -42,6 +42,17 @@ nonisolated final class HydrophoneIngressServer: @unchecked Sendable {
     func stop() {
         listener?.cancel()
         listener = nil
+        dropAllSessions()
+    }
+
+    func dropAllSessions() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            let current = Array(self.sessions.values)
+            for session in current {
+                session.forceClose()
+            }
+        }
     }
 
     private func accept(_ connection: NWConnection) {
@@ -99,6 +110,11 @@ nonisolated private final class ConnectionSession: @unchecked Sendable {
         guard !closed else { return }
         closed = true
         onClose()
+    }
+
+    func forceClose() {
+        connection.cancel()
+        fail()
     }
 
     func receive() {

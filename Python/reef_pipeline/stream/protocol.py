@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import socket
 import struct
 import time
@@ -11,8 +12,8 @@ from typing import Callable, Iterable, Optional
 import numpy as np
 
 PROTOCOL_NAME = "reefguard-hydro-v1"
-DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 17455
+DEFAULT_HOST = os.environ.get("REEFGUARD_HOST", "127.0.0.1")
+DEFAULT_PORT = int(os.environ.get("REEFGUARD_PORT", "17455"))
 FRAME_SAMPLES = 1_600  # 100 ms @ 16 kHz
 SAMPLE_RATE = 16_000
 
@@ -70,27 +71,30 @@ def stream_to_app(
         frame_dur = FRAME_SAMPLES / SAMPLE_RATE
         sent = 0
         cycles = 0
-        while True:
-            if should_stop is not None and should_stop():
-                break
-            t0 = time.perf_counter()
-            for i, (frame_bytes, samples) in enumerate(
-                zip(pcm16_frames(audio), float_frames(audio))
-            ):
+        try:
+            while True:
                 if should_stop is not None and should_stop():
                     break
-                sock.sendall(frame_bytes)
-                sent += 1
-                if on_frame is not None:
-                    on_frame(i, samples, (i + 1) * frame_dur)
-                if realtime:
-                    target = (i + 1) * frame_dur
-                    sleep = target - (time.perf_counter() - t0)
-                    if sleep > 0:
-                        time.sleep(sleep)
-            cycles += 1
-            if not loop or (should_stop is not None and should_stop()):
-                break
+                t0 = time.perf_counter()
+                for i, (frame_bytes, samples) in enumerate(
+                    zip(pcm16_frames(audio), float_frames(audio))
+                ):
+                    if should_stop is not None and should_stop():
+                        break
+                    sock.sendall(frame_bytes)
+                    sent += 1
+                    if on_frame is not None:
+                        on_frame(i, samples, (i + 1) * frame_dur)
+                    if realtime:
+                        target = (i + 1) * frame_dur
+                        sleep = target - (time.perf_counter() - t0)
+                        if sleep > 0:
+                            time.sleep(sleep)
+                cycles += 1
+                if not loop or (should_stop is not None and should_stop()):
+                    break
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError):
+            pass
         return {"ack": ack, "frames": sent, "cycles": cycles}
     finally:
         sock.close()

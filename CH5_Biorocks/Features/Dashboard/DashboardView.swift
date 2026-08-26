@@ -19,7 +19,7 @@ struct DashboardView: View {
     }
 
     private var primaryText: Color {
-        colorScheme == .dark ? .primary : .coralystText
+        colorScheme == .dark ? .white : Color(hex: "0F172A")
     }
 
     private var latestSnapshot: HealthSnapshotRecord? {
@@ -32,58 +32,116 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
+            VStack(alignment: .leading, spacing: 38) {
                 header
                 recentAlertsSection
                 sitesSummarySection
                 coverageSummary
-                siteStatus
+                siteStatusSection
             }
-            .frame(maxWidth: 1_440, alignment: .leading)
-            .padding(.horizontal, 28)
-            .padding(.vertical, 30)
+            .frame(maxWidth: 1_400, alignment: .leading)
+            .padding(.horizontal, 40)
+            .padding(.vertical, 36)
         }
         .scrollIndicators(.hidden)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(
+            Color(nsColor: .windowBackgroundColor)
+                .ignoresSafeArea()
+        )
     }
 
+    // MARK: - Header
     private var header: some View {
-        Text("All Sites Overview")
-            .font(.system(size: 48, weight: .bold))
-            .foregroundStyle(primaryText)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private var recentAlertsSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Recent Alerts")
-                    .font(.largeTitle)
-                    .bold()
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 16) {
+                Text("All Sites Overview")
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(primaryText)
+                    .accessibilityAddTraits(.isHeader)
 
                 Spacer()
-                
+
+                // Live Status Pill
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(Color(hex: "10B981"))
+                        .frame(width: 8, height: 8)
+                        .overlay(
+                            Circle()
+                                .stroke(Color(hex: "10B981").opacity(0.35), lineWidth: 3)
+                                .scaleEffect(1.4)
+                        )
+
+                    Text("LIVE MONITORING")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(hex: "10B981"))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    Color(hex: "10B981").opacity(colorScheme == .dark ? 0.18 : 0.1),
+                    in: Capsule()
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color(hex: "10B981").opacity(0.3), lineWidth: 1)
+                )
+            }
+
+            Text("Real-time reef acoustic intelligence, bio-acoustic metrics & blast detection")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Recent Alerts
+    private var recentAlertsSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center) {
+                HStack(spacing: 8) {
+                    Image(systemName: "bell.badge.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color(hex: "EF4444"))
+
+                    Text("Recent Alerts")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(primaryText)
+
+                    if !events.isEmpty {
+                        Text("\(events.count)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2.5)
+                            .background(Color(hex: "EF4444"), in: Capsule())
+                    }
+                }
+
+                Spacer()
+
                 Button(action: onViewAllAlerts) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 5) {
                         Text("All Alerts")
                         Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
                     }
-                    .font(.headline)
-                    .foregroundStyle(primaryText)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.coralystPrimary.opacity(0.1), in: Capsule())
                 }
                 .buttonStyle(.plain)
             }
 
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 18) {
+                HStack(spacing: 20) {
                     recentAlertCards
-                    Spacer()
                 }
 
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 290), spacing: 16)],
-                    spacing: 16
+                    columns: [GridItem(.adaptive(minimum: 300), spacing: 20)],
+                    spacing: 20
                 ) {
                     recentAlertCards
                 }
@@ -96,7 +154,6 @@ struct DashboardView: View {
         if recentEvents.isEmpty {
             ForEach(AlertSummary.preview) { alert in
                 AlertCard(alert: alert, primaryText: primaryText)
-                    .frame(maxWidth: 400)
             }
         } else {
             ForEach(recentEvents) { event in
@@ -104,7 +161,6 @@ struct DashboardView: View {
                     onSelectAlert(event)
                 } label: {
                     AlertCard(alert: AlertSummary(event: event), primaryText: primaryText)
-                        .frame(maxWidth: 400)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Open alert details")
@@ -112,32 +168,33 @@ struct DashboardView: View {
         }
     }
 
+    // MARK: - Sites Summary
     private var sitesSummarySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Sites Summary")
-                .font(.largeTitle)
-                .bold()
-                .foregroundStyle(primaryText)
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
+
+                Text("Sites Summary")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(primaryText)
+            }
 
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 24) {
+                HStack(spacing: 18) {
                     metricCards
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 180, maximum: 180), spacing: 24)],
-                    spacing: 16
+                    columns: [GridItem(.adaptive(minimum: 175), spacing: 18)],
+                    spacing: 18
                 ) {
                     metricCards
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-
-            Text("*Trend is compared to the last 24 hrs")
-                .font(.callout.italic())
-                .foregroundStyle(primaryText.opacity(0.9))
-                .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 
@@ -185,75 +242,83 @@ struct DashboardView: View {
         )
     }
 
+    // MARK: - Coverage Summary
     private var coverageSummary: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment:.top,spacing: 64) {
-                InfoItem(
-                    title: "Active Hydrophones",
-                    value: "\(hydrophoneCount)/\(max(hydrophoneCount, sites.count * 3))",
-                    systemImage: "waveform",
-                    primaryText: primaryText
-                )
-                InfoItem(
-                    title: "Depth Range",
-                    value: "4 – 15m",
-                    systemImage: "water.waves",
-                    primaryText: primaryText
-                )
-                InfoItem(
-                    title: "Total Coverage",
-                    value: coverageText,
-                    systemImage: "circle.circle",
-                    primaryText: primaryText
-                )
-            }
-
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 210), spacing: 24)],
-                spacing: 18
-            ) {
-                InfoItem(title: "Active Hydrophones", value: "\(hydrophoneCount)/\(max(hydrophoneCount, sites.count * 3))", systemImage: "waveform", primaryText: primaryText)
-                InfoItem(title: "Depth Range", value: "4 – 15m", systemImage: "water.waves", primaryText: primaryText)
-                InfoItem(title: "Total Coverage", value: coverageText, systemImage: "circle.circle", primaryText: primaryText)
-            }
+        HStack(spacing: 20) {
+            InfoItem(
+                title: "Active Hydrophones",
+                value: "\(hydrophoneCount)/\(max(hydrophoneCount, sites.count * 3))",
+                systemImage: "waveform",
+                primaryText: primaryText
+            )
+            InfoItem(
+                title: "Depth Range",
+                value: "4 – 15m",
+                systemImage: "water.waves",
+                primaryText: primaryText
+            )
+            InfoItem(
+                title: "Total Coverage",
+                value: coverageText,
+                systemImage: "circle.circle",
+                primaryText: primaryText
+            )
+            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    private var siteStatus: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 20) {
-                siteMap
-                    .frame(minWidth: 280, idealWidth: 470, maxWidth: 500)
+    // MARK: - Site Status Card & Map
+    private var siteStatusSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                Image(systemName: "map.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.coralystPrimary)
 
-                siteStatusTable
-                    .frame(minWidth: 400, maxWidth: .infinity, alignment: .leading)
+                Text("Site Status & Spatial Monitoring")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(primaryText)
             }
 
-            VStack(alignment: .leading, spacing: 20) {
-                siteMap
-                    .frame(maxWidth: 500, alignment: .leading)
-                siteStatusTable
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 28) {
+                    siteMap
+                        .frame(minWidth: 320, idealWidth: 460, maxWidth: 500)
+
+                    siteStatusTable
+                        .frame(minWidth: 420, maxWidth: .infinity, alignment: .leading)
+                }
+
+                VStack(alignment: .leading, spacing: 24) {
+                    siteMap
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    siteStatusTable
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06), lineWidth: 1)
+            }
+            .shadow(
+                color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.04),
+                radius: 10,
+                y: 3
+            )
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(primaryText.opacity(colorScheme == .dark ? 0.35 : 0.7), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(colorScheme == .dark ? 0.16 : 0.10), radius: 8, y: 3)
-        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var siteMap: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             Map {
                 ForEach(sites) { site in
                     MapCircle(center: site.coverageCenterCoordinate, radius: max(site.coverageRadiusMeters, 1))
-                        .foregroundStyle(Color.coralystPrimary.opacity(0.12))
+                        .foregroundStyle(Color.coralystPrimary.opacity(0.15))
                         .stroke(Color.coralystPrimary, lineWidth: 2)
 
                     Marker(site.name, systemImage: "water.waves", coordinate: site.coverageCenterCoordinate)
@@ -261,64 +326,140 @@ struct DashboardView: View {
                 }
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
-            .mapControls { MapScaleView() }
+            .mapControls {
+                MapScaleView()
+                MapCompass()
+            }
+
+            // Top Badge Overlay on Map
+            HStack(spacing: 6) {
+                Image(systemName: "location.north.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.coralystPrimary)
+                Text("\(sites.count) Monitored \(sites.count == 1 ? "Site" : "Sites")")
+                    .font(.system(size: 11.5, weight: .bold))
+                    .foregroundStyle(primaryText)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.primary.opacity(0.1), lineWidth: 1))
+            .padding(14)
 
             if sites.isEmpty {
                 ContentUnavailableView {
-                    Label("No Sites", systemImage: "map")
+                    Label("No Sites Registered", systemImage: "map")
                 } description: {
-                    Text("Add your first Site to display its status.")
+                    Text("Add your first Site to display its real-time status and telemetry.")
                 } actions: {
                     Button("Add Site", action: onAddSite)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.coralystPrimary)
                 }
-                .padding(18)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .padding(24)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.regularMaterial)
             }
         }
         .frame(height: 350)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.08), lineWidth: 1)
+        )
     }
 
     private var siteStatusTable: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Site Status")
-                .font(.largeTitle)
-                .bold()
-                .foregroundStyle(primaryText)
-
-            Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header Row
+            Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 14) {
                 GridRow {
-                    statusHeading("Site")
-                    statusHeading("Health\nComposite")
-                    statusHeading("NDSI")
-                    statusHeading("Snap Rate")
-                    statusHeading("Bomb Alerts")
+                    tableHeader("SITE")
+                    tableHeader("HEALTH")
+                    tableHeader("NDSI")
+                    tableHeader("SNAP RATE")
+                    tableHeader("ALERTS")
                 }
 
-                Divider().gridCellColumns(5)
+                Divider()
+                    .gridCellColumns(5)
+                    .padding(.vertical, 4)
 
                 ForEach(sites) { site in
+                    let siteAlerts = events.filter { $0.siteName == site.name }
+                    let health = healthValue(for: site)
+
                     GridRow {
-                        Text(site.name).lineLimit(1)
-                        Text(healthValue(for: site))
+                        // Site Name with indicator dot
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color.coralystPrimary)
+                                .frame(width: 7, height: 7)
+                            Text(site.name)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(primaryText)
+                                .lineLimit(1)
+                        }
+
+                        // Health Score Pill
+                        HStack(spacing: 4) {
+                            Text(health)
+                                .font(.system(size: 13.5, weight: .bold, design: .rounded))
+                                .foregroundStyle(health == "—" ? .secondary : Color(hex: "10B981"))
+                        }
+
+                        // NDSI
                         Text(ndsiValue(for: site))
+                            .font(.system(size: 13.5, weight: .medium, design: .monospaced))
+                            .foregroundStyle(primaryText)
+
+                        // Snap Rate
                         Text(snapRateValue(for: site))
-                        Text("\(events.filter { $0.siteName == site.name }.count)")
+                            .font(.system(size: 13.5, weight: .medium, design: .rounded))
+                            .foregroundStyle(primaryText)
+
+                        // Alerts Badge
+                        HStack(spacing: 4) {
+                            if siteAlerts.isEmpty {
+                                Text("0 Clear")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(Color(hex: "10B981"))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3.5)
+                                    .background(Color(hex: "10B981").opacity(0.12), in: Capsule())
+                            } else {
+                                Text("\(siteAlerts.count) Alert\(siteAlerts.count > 1 ? "s" : "")")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color(hex: "EF4444"))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3.5)
+                                    .background(Color(hex: "EF4444").opacity(0.12), in: Capsule())
+                            }
+                        }
                     }
-                    .font(.title3)
-//                    .fontWeight(.semibold)
-                    .foregroundStyle(primaryText)
+                    .padding(.vertical, 6)
+
+                    Divider()
+                        .gridCellColumns(5)
+                        .opacity(0.35)
                 }
             }
 
             if sites.isEmpty {
-                Text("Create a Site to see its real monitoring status here.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                VStack(spacing: 10) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.secondary)
+                    Text("No active monitoring sites")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 36)
             }
         }
-        .padding(.vertical, 12)
-        .padding(.trailing, 12)
+        .padding(.vertical, 6)
+        .padding(.trailing, 6)
     }
 
     private var coverageText: String {
@@ -341,15 +482,14 @@ struct DashboardView: View {
 
     private func snapRateValue(for site: Site) -> String {
         guard let snapshot = snapshots.first(where: { $0.siteName == site.name }) else { return "—" }
-        return String(format: "%.0f", snapshot.snapRatePerMin)
+        return String(format: "%.0f/m", snapshot.snapRatePerMin)
     }
 
-    private func statusHeading(_ text: String) -> some View {
+    private func tableHeader(_ text: String) -> some View {
         Text(text)
-            .font(.title3)
-            .fontWeight(.semibold)
-            .foregroundStyle(primaryText)
-            .fixedSize(horizontal: false, vertical: true)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(.secondary)
+            .tracking(0.5)
     }
 }
 

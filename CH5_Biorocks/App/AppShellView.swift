@@ -79,9 +79,12 @@ struct AppShellView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .navigationTitle("")
             }
+            .blur(radius: isPresentingNewSite ? 8 : 0)
 
             if isPresentingNewSite {
-                Color.black.opacity(0.32)
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .overlay(Color.black.opacity(0.25))
                     .ignoresSafeArea()
                     .onTapGesture(perform: dismissNewSite)
 
@@ -90,9 +93,10 @@ struct AppShellView: View {
                     onSubmit: createSite
                 )
                 .transition(.scale(scale: 0.96).combined(with: .opacity))
+                .shadow(color: .black.opacity(0.24), radius: 26, y: 12)
             }
         }
-        .animation(.easeOut(duration: 0.18), value: isPresentingNewSite)
+        .animation(.easeOut(duration: 0.2), value: isPresentingNewSite)
         .confirmationDialog(
             "Delete \(sitePendingDeletion?.name ?? "Site")?",
             isPresented: $isConfirmingSiteDeletion,

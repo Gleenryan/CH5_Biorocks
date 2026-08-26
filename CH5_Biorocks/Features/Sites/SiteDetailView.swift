@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import MapKit
+import CoreLocation
 
 struct SiteDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -36,9 +38,8 @@ struct SiteDetailView: View {
                 )
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 32) {
                         siteHeader
-                            .padding(.bottom, -8)
 
                         SiteOverviewView(
                             site: site,
@@ -52,10 +53,13 @@ struct SiteDetailView: View {
                     .padding(.bottom, 40)
                 }
                 .scrollIndicators(.hidden)
+                .blur(radius: (isPresentingSiteSettings || isPresentingHydrophone) ? 8 : 0)
             }
 
             if isPresentingSiteSettings, selectedHydrophone == nil {
-                Color.black.opacity(0.36)
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .overlay(Color.black.opacity(colorScheme == .dark ? 0.35 : 0.2))
                     .ignoresSafeArea()
                     .onTapGesture { isPresentingSiteSettings = false }
 
@@ -81,7 +85,9 @@ struct SiteDetailView: View {
             }
 
             if isPresentingHydrophone, selectedHydrophone == nil {
-                Color.black.opacity(0.36)
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .overlay(Color.black.opacity(colorScheme == .dark ? 0.35 : 0.2))
                     .ignoresSafeArea()
                     .onTapGesture(perform: dismissHydrophoneForm)
 
@@ -99,28 +105,65 @@ struct SiteDetailView: View {
             }
 
         }
-        .animation(.easeOut(duration: 0.18), value: isPresentingHydrophone)
-        .animation(.easeOut(duration: 0.18), value: isPresentingSiteSettings)
+        .animation(.easeOut(duration: 0.2), value: isPresentingHydrophone)
+        .animation(.easeOut(duration: 0.2), value: isPresentingSiteSettings)
     }
 
     private var siteHeader: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Text(site.name)
-                .font(.system(size: 48, weight: .bold))
-                .foregroundStyle(primaryText)
-                .lineLimit(2)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 16) {
+                Text(site.name)
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundStyle(primaryText)
+                    .lineLimit(1)
 
-            Spacer(minLength: 16)
+                // Site Active Pill
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color(hex: "10B981"))
+                        .frame(width: 7, height: 7)
+                    Text("ACTIVE SITE")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(hex: "10B981"))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    Color(hex: "10B981").opacity(colorScheme == .dark ? 0.18 : 0.1),
+                    in: Capsule()
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color(hex: "10B981").opacity(0.3), lineWidth: 1)
+                )
 
-            Button {
-                isPresentingSiteSettings = true
-            } label: {
-                Label("Settings", systemImage: "gearshape.fill")
+                Spacer(minLength: 16)
+
+                Button {
+                    isPresentingSiteSettings = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("Site Settings")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(primaryText)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.08), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Open site settings")
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.coralystPrimary)
-            .controlSize(.large)
-            .accessibilityHint("Open site settings")
+
+            Text("Reef deployment station • \(sortedHydrophones.count) Hydrophones configured • \(site.coverageCenterCoordinate.latitude.formatted(.number.precision(.fractionLength(4))))°, \(site.coverageCenterCoordinate.longitude.formatted(.number.precision(.fractionLength(4))))°")
+                .font(.system(size: 13.5, weight: .medium))
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -273,7 +316,7 @@ private struct HydrophoneRow: View {
     private var hydrophoneAudioID: String? { liveStatus?.id }
     private var isListening: Bool {
         guard let hydrophoneAudioID else { return false }
-        return store.listeningHydrophoneID == hydrophoneAudioID
+        return store.isPlaying(hydrophoneID: hydrophoneAudioID, connected: isLive)
     }
 
     private var blastEvent: BlastDetectionEvent? {
@@ -418,15 +461,24 @@ private struct HydrophoneRow: View {
 
     @ViewBuilder
     private func audioControl(id: String) -> some View {
-        if isLive {
+        if isListening {
+            Button {
+                hub.stopListening()
+            } label: {
+                Image(systemName: "speaker.slash.fill")
+                    .foregroundStyle(Color.orange)
+            }
+            .buttonStyle(.plain)
+            .help("Stop speaker playback")
+        } else if isLive {
             Button {
                 hub.toggleListen(hydrophoneID: id)
             } label: {
-                Image(systemName: isListening ? "speaker.wave.2.fill" : "speaker.wave.2")
-                    .foregroundStyle(isListening ? Color.green : Color.secondary)
+                Image(systemName: "speaker.wave.2")
+                    .foregroundStyle(Color.secondary)
             }
             .buttonStyle(.plain)
-            .help(isListening ? "Mute this hydrophone" : "Listen to this hydrophone")
+            .help("Listen to this hydrophone")
         } else if store.hasClip[id] == true {
             Button {
                 hub.replay(hydrophoneID: id)

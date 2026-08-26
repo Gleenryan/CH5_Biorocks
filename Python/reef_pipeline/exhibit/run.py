@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import signal
 import threading
 import time
 import traceback
@@ -78,6 +79,18 @@ def exhibit_cli(argv: Optional[List[str]] = None) -> int:
 
     stop = threading.Event()
     errors: List[str] = []
+
+    def _request_stop(*_args) -> None:
+        stop.set()
+        try:
+            import matplotlib.pyplot as plt
+
+            plt.close("all")
+        except Exception:  # noqa: BLE001
+            pass
+
+    signal.signal(signal.SIGTERM, _request_stop)
+    signal.signal(signal.SIGINT, _request_stop)
 
     def _stream_one(item: Dict[str, Any]) -> None:
         panel: HydroPanelState = item["panel"]

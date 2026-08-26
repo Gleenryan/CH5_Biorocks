@@ -53,10 +53,20 @@ def build_fleet_jobs(
     seed: int = 7,
     n_blasts: int = 1,
     root: Optional[Path] = None,
+    synthetic: bool = False,
+    duration_seconds: float = 45.0,
 ) -> List[Dict[str, Any]]:
     """Return stream jobs: one blast hydro + the rest pure field."""
     n_blasts = int(max(1, min(2, n_blasts)))
     root = root or data_root()
+    if synthetic or not _has_field_wavs(root):
+        print(
+            "[fleet] using synthetic hydrophone audio "
+            "(mount REEFGUARD_RAW_DATA with ind_N1 WAVs for real recordings)",
+            flush=True,
+        )
+        return _synthetic_fleet_jobs(seed=seed, n_blasts=n_blasts, duration_seconds=duration_seconds)
+
     rng = np.random.default_rng(seed)
 
     field_files = _pick_long_field_wavs(len(FLEET_SPECS), seed=seed, root=root)
@@ -116,6 +126,89 @@ def build_fleet_jobs(
     blast_jobs = [j for j in jobs if j.get("contains_blast_audio")]
     if len(blast_jobs) != 1:
         raise RuntimeError(f"expected exactly 1 blast hydro, got {len(blast_jobs)}")
+    return jobs
+
+
+def _has_field_wavs(root: Path) -> bool:
+    folder = ind_n1_dir(root)
+    try:
+        return folder.is_dir() and bool(list_wavs(folder))
+    except OSError:
+        return False
+
+
+def _add_impulse(audio: np.ndarray, onset: float, gain: float = 0.4) -> np.ndarray:
+    out = np.asarray(audio, dtype=np.float64).copy()
+    start = int(onset * SR)
+    t = np.arange(int(0.08 * SR)) / SR
+    impulse = gain * np.exp(-t * 60.0) * np.sin(2 * np.pi * 180 * t)
+    end = min(len(out), start + len(impulse))
+    if start >= 0 and end > start:
+        out[start:end] += impulse[: end - start]
+    peak = float(np.max(np.abs(out))) if len(out) else 0.0
+    if peak > 0.95:
+        out *= 0.95 / peak
+    return out
+
+
+def _synthetic_fleet_jobs(
+    seed: int,
+    n_blasts: int,
+    duration_seconds: float,
+) -> List[Dict[str, Any]]:
+    """Four hydros that anyone can stream without the raw-data archive."""
+    from reef_pipeline.stream.scenarios import _synthetic_ambient
+
+    rng = np.random.default_rng(seed)
+    blast_index = int(rng.integers(0, len(FLEET_SPECS)))
+    duration = float(max(12.0, duration_seconds))
+    jobs: List[Dict[str, Any]] = []
+    for i, spec in enumerate(FLEET_SPECS):
+        job = dict(spec)
+        job["hydrophone_id"] = hydrophone_uuid(spec["hydrophone_name"])
+        job["seed"] = int(seed + i * 17)
+        audio = _synthetic_ambient(duration, seed=int(job["seed"]))
+        if i == blast_index:
+            onset = float(rng.uniform(8.0, min(18.0, duration - 4.0)))
+            onsets = [onset]
+            if n_blasts > 1:
+                onsets.append(min(duration - 3.0, onset + 10.0))
+            events: List[GroundTruthEvent] = []
+            for blast_i, t0 in enumerate(onsets):
+                audio = _add_impulse(audio, t0)
+                events.append(
+                    GroundTruthEvent(
+                        id=f"gt-blast-{blast_i + 1}",
+                        t_onset_seconds=t0,
+                        t_offset_seconds=t0 + 0.15,
+                        label="blast",
+                        expected_alert=True,
+                        source_clip_id="synthetic:impulse",
+                        notes="Synthetic Docker/demo blast",
+                    )
+                )
+            job.update(
+                {
+                    "audio": audio,
+                    "events": events,
+                    "scenario": "synthetic_fleet_blast",
+                    "scenario_name": "Synthetic blast hydro",
+                    "audio_files": ["synthetic:impulse"],
+                    "contains_blast_audio": True,
+                }
+            )
+        else:
+            job.update(
+                {
+                    "audio": audio,
+                    "events": [],
+                    "scenario": "synthetic_fleet_field",
+                    "scenario_name": "Synthetic field hydro",
+                    "audio_files": ["synthetic:ambient"],
+                    "contains_blast_audio": False,
+                }
+            )
+        jobs.append(job)
     return jobs
 
 
